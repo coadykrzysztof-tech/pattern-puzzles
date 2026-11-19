@@ -1,0 +1,13 @@
+{
+  "name": "cuelab-arena",
+  "version": "1.1.0",
+  "private": true,
+  "description": "CueLab Arena — Pattern Puzzles, Spin Lab & Practice Planner",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/practice-planner.test.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

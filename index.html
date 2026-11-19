@@ -1291,6 +1291,7 @@
       font-size: 0.69rem;
     }
   </style>
+  <link rel="stylesheet" href="planner.css">
 </head>
 <body>
 
@@ -1310,7 +1311,8 @@
           <button onclick="switchGame('10ball', 'rot', this)">10-Ball</button>
           <button onclick="switchGame('8ball', 'solids', this)">8-Ball Solids</button>
           <button onclick="switchGame('8ball', 'stripes', this)">8-Ball Stripes</button>
-          <button class="sandbox-tab" onclick="switchGame('sandbox', 'lab', this)">🧪 Spin Lab</button>
+          <button class="sandbox-tab" id="spinLabTabBtn" onclick="switchGame('sandbox', 'lab', this)">🧪 Spin Lab</button>
+          <button class="planner-tab" id="plannerTabBtn" onclick="openPracticePlannerTab(this)">📋 Practice Planner</button>
         </div>
 
         <div class="rack-Nav" id="rackNavBox">
@@ -1344,7 +1346,19 @@
   </header>
 
   <main>
-    <section class="table-stage">
+    <!-- Instructor Snapshot Table Preview Return Banner -->
+    <div class="snapshot-preview-banner" id="snapshotPreviewBanner">
+      <div class="preview-banner-left">
+        <span class="preview-banner-kicker" id="previewBannerKicker">PREVIEWING DRILL LAYOUT</span>
+        <span class="preview-banner-title" id="previewBannerTitle">Drill Preview</span>
+      </div>
+      <button class="ctrl-btn cta-next" onclick="exitSnapshotTablePreview()">← Back to Practice Planner</button>
+    </div>
+
+    <!-- Student Practice Mode Assignment Header & Drill Stepper -->
+    <section class="student-assignment-bar" id="studentAssignmentHeader"></section>
+
+    <section class="table-stage" id="arenaTableStage">
       <canvas id="poolTable" width="1800" height="960"></canvas>
 
       <div class="stance-row">
@@ -1382,9 +1396,9 @@
       </div>
     </section>
 
-    <section class="bento-grid">
+    <section class="bento-grid" id="arenaBentoGrid">
       <!-- Card 1: Shot Command -->
-      <div class="glass-card">
+      <div class="glass-card" id="shotCommandCard">
         <div class="shot-top-row">
           <div class="shot-headline-group">
             <div class="hero-ball-badge" id="heroBallBadge">⚪</div>
@@ -1413,10 +1427,13 @@
         </div>
 
         <div class="playback-bar" id="sandboxPlaybackBar" style="display:none;">
-          <div class="btn-group-left">
-            <button class="ctrl-btn" onclick="addSandboxBlocker()">+ Blocker Ball</button>
-            <button class="ctrl-btn" onclick="clearSandboxBlockers()">Clear Blockers</button>
-            <button class="ctrl-btn" onclick="resetSandboxDefault()">↺ Reset Table</button>
+          <div class="btn-group-left" id="sandboxEditBtns">
+            <button class="ctrl-btn" onclick="addSandboxBlocker()">+ Blocker</button>
+            <button class="ctrl-btn" onclick="clearSandboxBlockers()">Clear</button>
+            <button class="ctrl-btn" id="sbTargetZoneBtn" onclick="toggleSandboxTargetZone()" title="Mark a target cue-ball leave zone on the table">🎯 Target Zone</button>
+            <button class="ctrl-btn" onclick="resetSandboxDefault()">↺ Reset</button>
+            <button class="ctrl-btn" onclick="openSaveCustomDrillModal()">💾 Save Drill</button>
+            <button class="ctrl-btn" onclick="openSavedDrillsModal()">📂 Saved Drills</button>
           </div>
           <div class="btn-group-right">
             <button class="ctrl-btn cta-next" onclick="animateSandboxShot()">▶ Shoot &amp; Roll</button>
@@ -1425,7 +1442,7 @@
       </div>
 
       <!-- Card 2: Interactive Draggable Cue Tip Explorer & Object Ball Throw Readout -->
-      <div class="glass-card">
+      <div class="glass-card" id="explorerCard">
         <div class="telemetry-top-bar">
           <div class="telemetry-header">Interactive Cue Ball &amp; Squirt/Throw Lab</div>
           <div class="explorer-top-btns">
@@ -1526,8 +1543,17 @@
           <span>Red Arrow = Squirt/Throw Miss</span>
         </div>
       </div>
+
+      <!-- Student Mode Drill Attempt Logger & Notes Card -->
+      <div class="glass-card card-tracker" id="studentAttemptPanel" style="display:none;"></div>
     </section>
+
+    <!-- Instructor Practice Planner Workspace -->
+    <section class="planner-workspace" id="plannerWorkspace"></section>
   </main>
+
+  <div class="cuelab-modal-backdrop" id="cuelabModalBackdrop"></div>
+  <div class="cuelab-toast" id="cuelabToast"></div>
 
   <script src="data.js"></script>
   <script>
@@ -1578,13 +1604,18 @@
     let compensateSquirt = false; // false = Fixed Aim (shows real squirt/throw miss!), true = Adjusted Aim
     let draggingTip = false;
 
-    // Spin Lab State
+    // Spin Lab State & Practice Planner Snapshot State
     let sandboxState = {
       cue: { x: 18, y: 18 },
       obj: { x: 34, y: 9 },
+      objBallNum: 1,
       pocket: 'P3',
-      blockers: [{ number: 8, x: 31, y: 15 }]
+      blockers: [{ number: 8, x: 31, y: 15 }],
+      targetZone: { enabled: false, x: 24, y: 14, radius: 46 }
     };
+    let activeSnapshotOverride = null;
+    let sandboxLocked = false;
+    let loadedCustomDrillId = null;
     let draggingCanvasItem = null;
 
     // Shot Animation State
@@ -2123,9 +2154,18 @@
       setupCueBallTipDrag();
       setupCanvasSandboxDrag();
       loadTries();
-      selectRack(1, true);
+      const urlHasAssignment = new URLSearchParams(window.location.search).has('assignment');
+      if (!urlHasAssignment) {
+        selectRack(1, true);
+      }
+      if (typeof window.initPracticePlanner === 'function') {
+        window.initPracticePlanner();
+      }
 
       window.addEventListener('keydown', (e) => {
+        const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+        if (currentGame === 'planner') return;
         if (currentGame !== 'sandbox') {
           if (e.key === 'ArrowRight') nextStroke();
           else if (e.key === 'ArrowLeft') prevStroke();
@@ -2306,8 +2346,19 @@
 
     function resetTipExplorer() {
       if (currentGame === 'sandbox') {
-        explorerTip = { x: 0, y: 0 };
-        explorerPower = 3;
+        if (activeSnapshotOverride && activeSnapshotOverride.kind === 'custom_drill') {
+          explorerTip = { x: Number(activeSnapshotOverride.tip?.x) || 0, y: Number(activeSnapshotOverride.tip?.y) || 0 };
+          explorerPower = parseInt(activeSnapshotOverride.power, 10) || 3;
+          compensateSquirt = Boolean(activeSnapshotOverride.compensateSquirt);
+          const btn = document.getElementById('aimCompBtn');
+          if (btn) {
+            btn.textContent = compensateSquirt ? 'Aim: Adjusted' : 'Aim: Fixed';
+            btn.classList.toggle('active-comp', compensateSquirt);
+          }
+        } else {
+          explorerTip = { x: 0, y: 0 };
+          explorerPower = 3;
+        }
         positionExplorerDot();
         updateHUD();
         render();
@@ -2344,7 +2395,7 @@
 
       canvas.addEventListener('pointerdown', (e) => {
         const sPt = getCanvasScreenPt(e);
-        if (currentGame !== 'sandbox') {
+        if (currentGame !== 'sandbox' || sandboxLocked) {
           const hit = findBallUnderScreenPt(sPt);
           hoveredBallInfo = (hoveredBallInfo && hit && hoveredBallInfo.key === hit.key) ? null : hit;
           render();
@@ -2388,19 +2439,33 @@
             return;
           }
         }
+
+        if (sandboxState.targetZone && sandboxState.targetZone.enabled) {
+          const tzw = gridXYToPx(sandboxState.targetZone.x, sandboxState.targetZone.y);
+          const tzs = worldToScreen(tzw.x, tzw.y);
+          if (Math.hypot(sPt.x - tzs.x, sPt.y - tzs.y) < 42) {
+            draggingCanvasItem = 'targetZone';
+            canvas.setPointerCapture(e.pointerId);
+            cancelAnim();
+            return;
+          }
+        }
       });
 
       canvas.addEventListener('pointermove', (e) => {
         const sPt = getCanvasScreenPt(e);
 
-        if (currentGame === 'sandbox' && draggingCanvasItem !== null) {
+        if (currentGame === 'sandbox' && !sandboxLocked && draggingCanvasItem !== null) {
           hoveredBallInfo = null;
           const wPt = screenToWorld(sPt.x, sPt.y);
           const gPt = pxToGridXY(wPt.x, wPt.y);
 
           if (draggingCanvasItem === 'cue') sandboxState.cue = gPt;
           else if (draggingCanvasItem === 'obj') sandboxState.obj = gPt;
-          else if (typeof draggingCanvasItem === 'number') {
+          else if (draggingCanvasItem === 'targetZone' && sandboxState.targetZone) {
+            sandboxState.targetZone.x = gPt.x;
+            sandboxState.targetZone.y = gPt.y;
+          } else if (typeof draggingCanvasItem === 'number') {
             sandboxState.blockers[draggingCanvasItem].x = gPt.x;
             sandboxState.blockers[draggingCanvasItem].y = gPt.y;
           }
@@ -2449,10 +2514,11 @@
         if (Math.hypot(sPt.x - cueS.x, sPt.y - cueS.y) <= hitR) {
           return { key: 'cue', num: 'CUE', title: `Cue Ball · ${formatGridCoord(sandboxState.cue.x, sandboxState.cue.y)}`, sx: cueS.x, sy: cueS.y, col: '#38bdf8' };
         }
+        const obNum = sandboxState.objBallNum || 1;
         const objW = gridXYToPx(sandboxState.obj.x, sandboxState.obj.y);
         const objS = worldToScreen(objW.x, objW.y);
         if (Math.hypot(sPt.x - objS.x, sPt.y - objS.y) <= hitR) {
-          return { key: 'b1', num: '1', title: `#1 Yellow · ${formatGridCoord(sandboxState.obj.x, sandboxState.obj.y)}`, sx: objS.x, sy: objS.y, col: BALL_PALETTE[1] };
+          return { key: `b${obNum}`, num: String(obNum), title: `#${obNum} ${BALL_COLOR_NAMES[obNum] || ''} · ${formatGridCoord(sandboxState.obj.x, sandboxState.obj.y)}`, sx: objS.x, sy: objS.y, col: BALL_PALETTE[obNum] || '#facc15' };
         }
         for (const b of sandboxState.blockers) {
           const bw = gridXYToPx(b.x, b.y);
@@ -2526,16 +2592,43 @@
     }
 
     function resetSandboxDefault() {
+      loadedCustomDrillId = null;
       sandboxState = {
         cue: { x: 18, y: 18 },
         obj: { x: 34, y: 9 },
+        objBallNum: 1,
         pocket: 'P3',
-        blockers: [{ number: 8, x: 31, y: 15 }]
+        blockers: [{ number: 8, x: 31, y: 15 }],
+        targetZone: { enabled: false, x: 24, y: 14, radius: 46 }
       };
+      const tzBtn = document.getElementById('sbTargetZoneBtn');
+      if (tzBtn) tzBtn.classList.remove('active-toggle');
       explorerTip = { x: 0, y: 0 };
       explorerPower = 3;
       positionExplorerDot();
       setSandboxPocket('P3');
+    }
+
+    function toggleSandboxTargetZone() {
+      if (sandboxLocked) return;
+      if (!sandboxState.targetZone) {
+        sandboxState.targetZone = { enabled: false, x: 24, y: 14, radius: 46 };
+      }
+      sandboxState.targetZone.enabled = !sandboxState.targetZone.enabled;
+      if (sandboxState.targetZone.enabled) {
+        const sim = simulateWhatIfShot(
+          sandboxState.cue, sandboxState.obj, sandboxState.pocket,
+          explorerTip.x, explorerTip.y, explorerPower, sandboxState.blockers
+        );
+        if (sim && !sim.impossibleCut && !sim.whiffedObjectBall && sim.endGrid) {
+          sandboxState.targetZone.x = sim.endGrid.x;
+          sandboxState.targetZone.y = sim.endGrid.y;
+        }
+      }
+      const tzBtn = document.getElementById('sbTargetZoneBtn');
+      if (tzBtn) tzBtn.classList.toggle('active-toggle', sandboxState.targetZone.enabled);
+      updateHUD();
+      render();
     }
 
     function animateSandboxShot() {
@@ -2549,6 +2642,12 @@
 
     // ==================== CHOREOGRAPHED SHOT TRANSITIONS ====================
     function switchGame(game, subset, btnEl) {
+      activeSnapshotOverride = null;
+      sandboxLocked = false;
+      if (typeof window.onExitPlannerOrPreview === 'function') {
+        window.onExitPlannerOrPreview();
+      }
+
       currentGame = game;
       currentSubset = subset;
       document.querySelectorAll('#gameTabs button').forEach(b => b.classList.remove('active'));
@@ -2559,8 +2658,12 @@
       document.getElementById('rackNavBox').style.display = isSB ? 'none' : 'flex';
       document.getElementById('puzzlePlaybackBar').style.display = isSB ? 'none' : 'flex';
       document.getElementById('sandboxPlaybackBar').style.display = isSB ? 'flex' : 'none';
+      const sbEdit = document.getElementById('sandboxEditBtns');
+      if (sbEdit) sbEdit.style.display = 'flex';
       document.getElementById('scorecardPanel').style.display = isSB ? 'none' : 'flex';
       document.getElementById('sandboxPocketPanel').style.display = isSB ? 'flex' : 'none';
+      const stuPanel = document.getElementById('studentAttemptPanel');
+      if (stuPanel) stuPanel.style.display = 'none';
       canvas.style.cursor = isSB ? 'grab' : 'default';
 
       stopAutoPlay();
@@ -2569,6 +2672,8 @@
       if (isSB) {
         explorerActive = true;
         document.getElementById('cueCoachDot').style.display = 'none';
+        const tzBtn = document.getElementById('sbTargetZoneBtn');
+        if (tzBtn) tzBtn.classList.toggle('active-toggle', Boolean(sandboxState.targetZone?.enabled));
         positionExplorerDot();
         buildTimeline();
         computeDesiredCameraAngle(false);
@@ -2602,11 +2707,17 @@
     }
 
     function getRackData() {
+      if (activeSnapshotOverride && (activeSnapshotOverride.kind === 'rack' || activeSnapshotOverride.kind === 'rack_shot')) {
+        return activeSnapshotOverride;
+      }
       const g = PUZZLE_DATA.games[currentGame];
       return g ? g.racks[currentRackNum] : null;
     }
 
     function getActiveBIH() {
+      if (activeSnapshotOverride && (activeSnapshotOverride.kind === 'rack' || activeSnapshotOverride.kind === 'rack_shot')) {
+        return activeSnapshotOverride.bih || 'A1';
+      }
       const r = getRackData();
       if (!r) return 'A1';
       if (currentGame === '8ball' && currentSubset === 'stripes') return r.bihStripes || r.bih;
@@ -2614,6 +2725,9 @@
     }
 
     function getStrokes() {
+      if (activeSnapshotOverride && (activeSnapshotOverride.kind === 'rack' || activeSnapshotOverride.kind === 'rack_shot')) {
+        return activeSnapshotOverride.strokes || [];
+      }
       const r = getRackData();
       if (!r) return [];
       if (currentGame === '8ball') return currentSubset === 'stripes' ? r.stripesStrokes : r.solidsStrokes;
@@ -3274,8 +3388,11 @@
         ctx.beginPath(); ctx.arc(leavePos.x, leavePos.y, 25, 0, Math.PI * 2); ctx.stroke();
         ctx.restore();
 
-        if (currentStrokeIdx < strokes.length) {
-          const nextBallPos = gridToPx(strokes[currentStrokeIdx].obj || strokes[currentStrokeIdx].coord);
+        const nextRefCoord = currentStrokeIdx < strokes.length
+          ? (strokes[currentStrokeIdx].obj || strokes[currentStrokeIdx].coord)
+          : (activeSnapshotOverride && activeSnapshotOverride.nextBallCoord ? activeSnapshotOverride.nextBallCoord : null);
+        if (nextRefCoord) {
+          const nextBallPos = gridToPx(nextRefCoord);
           if (nextBallPos) {
             ctx.save();
             ctx.strokeStyle = 'rgba(52, 211, 153, 0.5)';
@@ -3295,6 +3412,24 @@
       const cuePos = gridXYToPx(sandboxState.cue.x, sandboxState.cue.y);
       const objPos = gridXYToPx(sandboxState.obj.x, sandboxState.obj.y);
       const pktPos = POCKETS[sandboxState.pocket];
+
+      if (sandboxState.targetZone && sandboxState.targetZone.enabled) {
+        const tzPx = gridXYToPx(sandboxState.targetZone.x, sandboxState.targetZone.y);
+        const tzR = sandboxState.targetZone.radius || 46;
+        const zoneGrad = ctx.createRadialGradient(tzPx.x, tzPx.y, 4, tzPx.x, tzPx.y, tzR);
+        zoneGrad.addColorStop(0, 'rgba(56, 189, 248, 0.50)');
+        zoneGrad.addColorStop(0.58, 'rgba(56, 189, 248, 0.18)');
+        zoneGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        ctx.fillStyle = zoneGrad;
+        ctx.beginPath(); ctx.arc(tzPx.x, tzPx.y, tzR, 0, Math.PI * 2); ctx.fill();
+
+        ctx.save();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.4;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath(); ctx.arc(tzPx.x, tzPx.y, Math.max(22, tzR * 0.55), 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
 
       const missed = whatIfSim && whatIfSim.obResult && !whatIfSim.obResult.madeTarget;
       ctx.save();
@@ -3386,6 +3521,8 @@
 
     function drawSandboxBallsScreen(camScale, whatIfSim) {
       const rScaled = getVisualBallRadius(camScale);
+      const obNum = sandboxState.objBallNum || 1;
+      const obStripe = obNum >= 9;
 
       sandboxState.blockers.forEach(b => {
         const w = gridXYToPx(b.x, b.y);
@@ -3399,7 +3536,7 @@
       if (isAnimating && sandboxSimCache && !sandboxSimCache.impossibleCut && !sandboxSimCache.whiffedObjectBall) {
         if (animProgress <= 0.34) {
           const sObj = worldToScreen(objW.x, objW.y);
-          drawAramithBall(sObj.x, sObj.y, rScaled, 1, false, true, false);
+          drawAramithBall(sObj.x, sObj.y, rScaled, obNum, obStripe, true, false);
           const ghostW = gridXYToPx(sandboxSimCache.ghost.x, sandboxSimCache.ghost.y);
           const t1 = animProgress / 0.34;
           const sCue = worldToScreen(cueW.x + (ghostW.x - cueW.x) * t1, cueW.y + (ghostW.y - cueW.y) * t1);
@@ -3410,7 +3547,7 @@
           if (!sandboxSimCache.obResult.madeTarget || obT < 0.96) {
             const wOb = interpolatePolyline(obPathW, 1 - Math.pow(1 - obT, 2));
             const sObj = worldToScreen(wOb.x, wOb.y);
-            drawAramithBall(sObj.x, sObj.y, rScaled, 1, false, true, false);
+            drawAramithBall(sObj.x, sObj.y, rScaled, obNum, obStripe, true, false);
           }
           const ptsW = sandboxSimCache.path.map(p => gridXYToPx(p.x, p.y));
           const t2 = 1 - Math.pow(1 - (animProgress - 0.34) / 0.66, 2.2);
@@ -3422,10 +3559,17 @@
       }
 
       const sObj = worldToScreen(objW.x, objW.y);
-      drawAramithBall(sObj.x, sObj.y, rScaled, 1, false, true, false);
+      drawAramithBall(sObj.x, sObj.y, rScaled, obNum, obStripe, true, false);
 
       const sCue = worldToScreen(cueW.x, cueW.y);
       drawAramithCueBall(sCue.x, sCue.y, rScaled, true);
+
+      if (sandboxState.targetZone && sandboxState.targetZone.enabled) {
+        const tzW = gridXYToPx(sandboxState.targetZone.x, sandboxState.targetZone.y);
+        const spTz = worldToScreen(tzW.x, tzW.y);
+        const tzCoord = formatGridCoord(sandboxState.targetZone.x, sandboxState.targetZone.y);
+        drawScreenPill(spTz.x, spTz.y - 38 * spTz.scale, `TARGET ZONE: ${tzCoord}`, '#0ea5e9');
+      }
 
       if (whatIfSim && !whatIfSim.impossibleCut && !whatIfSim.whiffedObjectBall) {
         if (whatIfSim.obResult && !whatIfSim.obResult.madeTarget && whatIfSim.obResult.railHitPt) {
@@ -3736,10 +3880,11 @@
         angleEl.textContent = sim && sim.cutDeg ? `${Math.round(sim.cutDeg)}°` : '—';
         railsEl.textContent = sim && !sim.impossibleCut && !sim.whiffedObjectBall ? `${sim.bounces} Rail${sim.bounces === 1 ? '' : 's'}` : '—';
 
-        const msg = formatOutcomeMessage(sim, '1-Ball', sandboxState.pocket);
+        const msg = formatOutcomeMessage(sim, `#${sandboxState.objBallNum || 1}-Ball`, sandboxState.pocket);
         expReadout.classList.add('visible');
         expReadout.classList.toggle('warn', msg.warn);
         expReadout.textContent = msg.text;
+        if (typeof window.afterUpdateHUD === 'function') window.afterUpdateHUD();
         return;
       }
 
@@ -3775,6 +3920,7 @@
         powerEl.textContent = 'Ready';
         setSpeedSegments(0);
         expReadout.classList.remove('visible');
+        if (typeof window.afterUpdateHUD === 'function') window.afterUpdateHUD();
         return;
       }
 
@@ -3839,6 +3985,7 @@
         powerEl.textContent = `Power ${pwr} · ${pwrLabels[pwr] || 'Medium'}`;
         setSpeedSegments(pwr);
       }
+      if (typeof window.afterUpdateHUD === 'function') window.afterUpdateHUD();
     }
 
     function setSpeedSegments(pwr) {
@@ -3904,5 +4051,6 @@
 
     window.addEventListener('DOMContentLoaded', init);
   </script>
+  <script src="planner.js"></script>
 </body>
 </html>
