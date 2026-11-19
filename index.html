@@ -1,0 +1,3908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CueLab Pro — Interactive Pattern & Spin Trainer</title>
+  <style>
+    :root {
+      --bg-void: #060911;
+      --bg-arena: #0b1120;
+      --glass-bg: rgba(15, 23, 42, 0.80);
+      --glass-elevated: rgba(30, 41, 59, 0.85);
+      --border-subtle: rgba(148, 163, 184, 0.15);
+      --border-bright: rgba(56, 189, 248, 0.45);
+      --accent-cyan: #38bdf8;
+      --accent-blue: #2563eb;
+      --accent-gold: #fbbf24;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% 28%, rgba(29, 78, 216, 0.18), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 50% 0%, rgba(56, 189, 248, 0.10), transparent 60%),
+        var(--bg-void);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(8, 13, 25, 0.88);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 24px;
+    }
+
+    .header-inner {
+      max-width: 1460px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 55%, #1d4ed8 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.35), inset 0 1px 1px rgba(255,255,255,0.4);
+      font-weight: 900;
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .brand-text span {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+    }
+
+    .nav-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .segmented-tabs {
+      display: flex;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .segmented-tabs button {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .segmented-tabs button:hover {
+      color: #fff;
+    }
+
+    .segmented-tabs button.active {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+
+    .segmented-tabs button.sandbox-tab.active {
+      background: linear-gradient(135deg, #7c3aed, #db2777);
+      box-shadow: 0 2px 12px rgba(219, 39, 119, 0.45);
+    }
+
+    .segmented-tabs.pov-tabs button.active {
+      background: linear-gradient(135deg, #059669, #10b981);
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+    }
+
+    .rack-Nav {
+      display: flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    select#rackSelect {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 6px 8px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    select#rackSelect option {
+      background: #0f172a;
+      color: #fff;
+    }
+
+    .utility-btn {
+      background: rgba(30, 41, 59, 0.75);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .utility-btn:hover {
+      background: rgba(51, 65, 85, 0.85);
+      color: #fff;
+      border-color: rgba(148, 163, 184, 0.35);
+    }
+
+    .utility-btn.active-toggle {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    /* 12-Color Cloth Swatch Dropdown */
+    .cloth-dropdown-wrap {
+      position: relative;
+    }
+
+    .cloth-swatch-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.65);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .cloth-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 248px;
+      background: rgba(11, 17, 32, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 14px;
+      padding: 8px;
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.75);
+      display: none;
+      flex-direction: column;
+      gap: 3px;
+      z-index: 100;
+    }
+
+    .cloth-menu.open {
+      display: flex;
+    }
+
+    .cloth-option {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 8px 10px;
+      border-radius: 9px;
+      font-size: 0.81rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.14s ease;
+      text-align: left;
+    }
+
+    .cloth-option:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .cloth-option.selected {
+      background: rgba(56, 189, 248, 0.15);
+      color: #fff;
+    }
+
+    .cloth-opt-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1460px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .table-stage {
+      position: relative;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: radial-gradient(ellipse 75% 65% at 50% 50%, rgba(15, 23, 42, 0.9), rgba(6, 9, 17, 0.95));
+      border: 1px solid var(--border-subtle);
+      border-radius: 22px;
+      padding: 14px 18px 12px;
+      box-shadow:
+        0 28px 60px -15px rgba(0, 0, 0, 0.85),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    canvas#poolTable {
+      width: 100%;
+      max-width: 1320px;
+      aspect-ratio: 1800 / 960;
+      display: block;
+      border-radius: 14px;
+      touch-action: none;
+    }
+
+    .stance-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .stance-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.32);
+      color: #6ee7b7;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .phase-chip {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(250, 204, 21, 0.16);
+      border: 1px solid rgba(250, 204, 21, 0.45);
+      color: #fde047;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .phase-chip.visible {
+      display: flex;
+    }
+
+    .timeline-bar {
+      width: 100%;
+      max-width: 1320px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 6px 2px;
+      flex-wrap: wrap;
+    }
+
+    .ball-stepper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .step-node {
+      height: 34px;
+      min-width: 34px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .step-node:hover {
+      border-color: rgba(255,255,255,0.3);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+
+    .step-node.active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: var(--accent-cyan);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+    }
+
+    .step-node.completed {
+      opacity: 0.55;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .mini-ball-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: inset -2px -2px 4px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    .legend-pills {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .legend-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 1.32fr 1.22fr 0.78fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 1160px) {
+      .bento-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .card-tracker {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+      .card-tracker {
+        grid-column: span 1;
+      }
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .shot-top-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .shot-headline-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .hero-ball-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 900;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+
+    .shot-kicker {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--accent-cyan);
+      margin-bottom: 3px;
+    }
+
+    .shot-main-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .target-pill-callout {
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--accent-cyan);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .coach-box {
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.10), rgba(30, 41, 59, 0.35));
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 12px;
+      padding: 12px 15px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .coach-box strong {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .playback-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .btn-group-left, .btn-group-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ctrl-btn {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      color: var(--text-primary);
+      padding: 9px 14px;
+      border-radius: 11px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.16s ease;
+    }
+
+    .ctrl-btn:hover:not(:disabled) {
+      background: rgba(51, 65, 85, 0.95);
+      border-color: rgba(148, 163, 184, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .ctrl-btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+    }
+
+    .ctrl-btn.cta-next {
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      border-color: rgba(125, 211, 252, 0.5);
+      color: #fff;
+      padding: 9px 20px;
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+
+    .ctrl-btn.cta-next:hover:not(:disabled) {
+      background: linear-gradient(135deg, #38bdf8 0%, #1d4ed8 100%);
+      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.55);
+    }
+
+    /* Interactive Cue Ball Tip Explorer Card */
+    .telemetry-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .telemetry-header {
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--text-muted);
+    }
+
+    .explorer-top-btns {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .explorer-chip-btn {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: var(--text-secondary);
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+    }
+
+    .explorer-chip-btn.visible {
+      display: inline-block;
+    }
+
+    .explorer-chip-btn.active-comp {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .explorer-reset-btn {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+    }
+
+    .explorer-reset-btn.visible {
+      display: inline-block;
+    }
+
+    .telemetry-split {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .cue-widget-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cue-ball-widget {
+      width: 102px;
+      height: 102px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f1f5f9 48%, #cbd5e1 80%, #94a3b8 100%);
+      box-shadow:
+        0 10px 24px rgba(0,0,0,0.6),
+        inset -4px -6px 12px rgba(15, 23, 42, 0.25),
+        0 0 0 3px rgba(56, 189, 248, 0.28);
+      position: relative;
+      flex-shrink: 0;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .cue-ball-widget:active {
+      cursor: grabbing;
+    }
+
+    .cue-safe-ring {
+      position: absolute;
+      inset: 14%;
+      border-radius: 50%;
+      border: 1px dashed rgba(71, 85, 105, 0.35);
+      pointer-events: none;
+    }
+
+    .cue-ball-widget::before,
+    .cue-ball-widget::after {
+      content: '';
+      position: absolute;
+      background: rgba(71, 85, 105, 0.26);
+      pointer-events: none;
+    }
+    .cue-ball-widget::before {
+      top: 14%; bottom: 14%; left: 50%; width: 1px; transform: translateX(-50%);
+    }
+    .cue-ball-widget::after {
+      left: 14%; right: 14%; top: 50%; height: 1px; transform: translateY(-50%);
+    }
+
+    .clock-num {
+      position: absolute;
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: #475569;
+      pointer-events: none;
+    }
+    .clock-12 { top: 4px; left: 50%; transform: translateX(-50%); }
+    .clock-6  { bottom: 4px; left: 50%; transform: translateX(-50%); }
+    .clock-9  { left: 5px; top: 50%; transform: translateY(-50%); }
+    .clock-3  { right: 5px; top: 50%; transform: translateY(-50%); }
+
+    .cue-tip-coach {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fb7185, #e11d48);
+      border: 2px solid #fff;
+      box-shadow: 0 0 8px rgba(225, 29, 72, 0.8);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      transition: top 0.24s ease, left 0.24s ease;
+    }
+
+    .cue-tip-explorer {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #34d399, #059669);
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.95);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .cue-hint-caption {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #34d399;
+      text-align: center;
+    }
+
+    .telemetry-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .metric-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.79rem;
+      gap: 6px;
+    }
+
+    .metric-name {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .metric-value {
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.86rem;
+      text-align: right;
+    }
+
+    .speed-segments {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    .speed-seg {
+      height: 11px;
+      border-radius: 99px;
+      background: rgba(51, 65, 85, 0.65);
+      cursor: pointer;
+      transition: all 0.16s ease;
+      border: 1px solid transparent;
+    }
+
+    .speed-seg:hover {
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    .speed-seg.on-1 { background: #38bdf8; box-shadow: 0 0 8px rgba(56,189,248,0.5); }
+    .speed-seg.on-2 { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+    .speed-seg.on-3 { background: #facc15; box-shadow: 0 0 8px rgba(250,204,21,0.5); }
+    .speed-seg.on-4 { background: #f97316; box-shadow: 0 0 8px rgba(249,115,22,0.5); }
+    .speed-seg.on-5 { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.5); }
+
+    .sub-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mini-stat-pill {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .mini-stat-pill span {
+      color: #fff;
+    }
+
+    .explorer-Readout {
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1.38;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.32);
+      color: #6ee7b7;
+      display: none;
+    }
+
+    .explorer-Readout.warn {
+      background: rgba(244, 63, 94, 0.16);
+      border-color: rgba(244, 63, 94, 0.45);
+      color: #fda4af;
+    }
+
+    .explorer-Readout.visible {
+      display: block;
+    }
+
+    .tracker-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-chip {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(251, 191, 36, 0.14);
+      color: var(--accent-gold);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .status-chip.passed {
+      background: rgba(16, 185, 129, 0.16);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .tries-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .try-slot {
+      height: 46px;
+      border-radius: 11px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-weight: 800;
+      font-size: 0.84rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .try-slot:hover {
+      border-color: rgba(255,255,255,0.3);
+      transform: translateY(-1px);
+    }
+
+    .try-slot.win {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: #10b981;
+      color: #6ee7b7;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.2);
+    }
+
+    .try-slot.miss {
+      background: rgba(244, 63, 94, 0.18);
+      border-color: #f43f5e;
+      color: #fda4af;
+    }
+
+    .mastery-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      padding-top: 8px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .link-reset {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .link-reset:hover {
+      color: #fff;
+    }
+
+    .sandbox-pocket-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .sb-pkt-btn {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 8px 0;
+      border-radius: 9px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .sb-pkt-btn.active {
+      background: rgba(250, 204, 21, 0.2);
+      border-color: #facc15;
+      color: #fde047;
+    }
+
+    .expand-highlight-btn {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(37, 99, 235, 0.28));
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      color: #e0f2fe;
+    }
+
+    .expand-highlight-btn.active-toggle {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-color: #7dd3fc;
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
+    }
+
+    /* ==================== EXPANDED TABLE MODE (SURFACE / TABLET COCKPIT) ==================== */
+    body.expanded-mode {
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+    }
+
+    body.expanded-mode header {
+      padding: 5px 14px;
+    }
+
+    body.expanded-mode .header-inner {
+      max-width: 100%;
+      gap: 6px;
+    }
+
+    body.expanded-mode .brand {
+      gap: 8px;
+    }
+
+    body.expanded-mode .brand-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 0.85rem;
+      border-radius: 7px;
+    }
+
+    body.expanded-mode .brand-text h1 {
+      font-size: 0.96rem;
+    }
+
+    body.expanded-mode .brand-text span {
+      display: none;
+    }
+
+    body.expanded-mode .nav-controls {
+      gap: 6px;
+    }
+
+    body.expanded-mode .segmented-tabs {
+      padding: 2px;
+      border-radius: 9px;
+    }
+
+    body.expanded-mode .segmented-tabs button {
+      padding: 4px 9px;
+      font-size: 0.74rem;
+      border-radius: 6px;
+    }
+
+    body.expanded-mode .rack-Nav {
+      padding: 1px;
+      border-radius: 9px;
+    }
+
+    body.expanded-mode .icon-btn {
+      width: 26px;
+      height: 26px;
+      font-size: 0.76rem;
+    }
+
+    body.expanded-mode select#rackSelect {
+      padding: 3px 6px;
+      font-size: 0.76rem;
+    }
+
+    body.expanded-mode .utility-btn {
+      padding: 5px 9px;
+      font-size: 0.74rem;
+      border-radius: 8px;
+    }
+
+    body.expanded-mode main {
+      max-width: 100%;
+      padding: 6px 12px 8px;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    body.expanded-mode .table-stage {
+      flex: 1;
+      min-height: 0;
+      padding: 6px 10px 4px;
+      border-radius: 14px;
+      justify-content: center;
+    }
+
+    body.expanded-mode canvas#poolTable {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: calc(100dvh - 206px);
+      aspect-ratio: 1800 / 960;
+    }
+
+    body.expanded-mode .stance-row {
+      margin-top: 2px;
+      gap: 8px;
+    }
+
+    body.expanded-mode .stance-banner,
+    body.expanded-mode .phase-chip {
+      padding: 2px 10px;
+      font-size: 0.68rem;
+    }
+
+    body.expanded-mode .timeline-bar {
+      max-width: 100%;
+      padding: 4px 4px 0;
+      gap: 8px;
+    }
+
+    body.expanded-mode .step-node {
+      height: 25px;
+      min-width: 26px;
+      padding: 0 8px;
+      font-size: 0.71rem;
+      gap: 4px;
+    }
+
+    body.expanded-mode .mini-ball-dot {
+      width: 11px;
+      height: 11px;
+    }
+
+    body.expanded-mode .legend-pills {
+      font-size: 0.68rem;
+      gap: 10px;
+    }
+
+    /* Ultra-Compact Single-Row Bottom Dock */
+    body.expanded-mode .bento-grid {
+      grid-template-columns: 1.42fr 1.25fr 0.78fr;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    body.expanded-mode .glass-card {
+      padding: 8px 12px;
+      gap: 5px;
+      border-radius: 12px;
+    }
+
+    body.expanded-mode .hero-ball-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      font-size: 0.95rem;
+    }
+
+    body.expanded-mode .shot-headline-group {
+      gap: 9px;
+    }
+
+    body.expanded-mode .shot-kicker {
+      font-size: 0.62rem;
+      margin-bottom: 1px;
+    }
+
+    body.expanded-mode .shot-main-title {
+      font-size: 0.95rem;
+    }
+
+    body.expanded-mode .target-pill-callout {
+      padding: 3px 8px;
+      font-size: 0.73rem;
+      border-radius: 7px;
+    }
+
+    body.expanded-mode .coach-box {
+      padding: 4px 9px;
+      font-size: 0.76rem;
+      line-height: 1.28;
+      border-radius: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    body.expanded-mode .playback-bar {
+      gap: 6px;
+    }
+
+    body.expanded-mode .btn-group-left,
+    body.expanded-mode .btn-group-right {
+      gap: 5px;
+    }
+
+    body.expanded-mode .ctrl-btn {
+      padding: 5px 10px;
+      font-size: 0.75rem;
+      border-radius: 8px;
+    }
+
+    body.expanded-mode .ctrl-btn.cta-next {
+      padding: 5px 14px;
+    }
+
+    body.expanded-mode .telemetry-header {
+      font-size: 0.65rem;
+    }
+
+    body.expanded-mode .telemetry-split {
+      gap: 10px;
+    }
+
+    body.expanded-mode .cue-ball-widget {
+      width: 66px;
+      height: 66px;
+    }
+
+    body.expanded-mode .clock-num {
+      font-size: 0.52rem;
+    }
+
+    body.expanded-mode .cue-tip-coach {
+      width: 11px;
+      height: 11px;
+    }
+
+    body.expanded-mode .cue-tip-explorer {
+      width: 14px;
+      height: 14px;
+    }
+
+    body.expanded-mode .cue-hint-caption {
+      display: none;
+    }
+
+    body.expanded-mode .telemetry-metrics {
+      gap: 4px;
+    }
+
+    body.expanded-mode .metric-top {
+      font-size: 0.71rem;
+    }
+
+    body.expanded-mode .metric-value {
+      font-size: 0.76rem;
+    }
+
+    body.expanded-mode .speed-seg {
+      height: 8px;
+    }
+
+    body.expanded-mode .explorer-Readout {
+      padding: 3px 7px;
+      font-size: 0.69rem;
+      line-height: 1.22;
+    }
+
+    body.expanded-mode .mini-stat-pill {
+      padding: 2px 7px;
+      font-size: 0.69rem;
+    }
+
+    body.expanded-mode .tracker-subtitle {
+      display: none;
+    }
+
+    body.expanded-mode .tries-grid {
+      gap: 5px;
+    }
+
+    body.expanded-mode .try-slot {
+      height: 30px;
+      font-size: 0.74rem;
+      border-radius: 7px;
+    }
+
+    body.expanded-mode .sb-pkt-btn {
+      padding: 4px 0;
+      font-size: 0.73rem;
+    }
+
+    body.expanded-mode .mastery-footer {
+      padding-top: 3px;
+      font-size: 0.69rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon" id="brandIcon">9</div>
+        <div class="brand-text">
+          <h1>CueLab Arena</h1>
+          <span>Pro Pattern &amp; Spin Lab</span>
+        </div>
+      </div>
+
+      <div class="nav-controls">
+        <div class="segmented-tabs" id="gameTabs">
+          <button class="active" onclick="switchGame('9ball', 'rot', this)">9-Ball</button>
+          <button onclick="switchGame('10ball', 'rot', this)">10-Ball</button>
+          <button onclick="switchGame('8ball', 'solids', this)">8-Ball Solids</button>
+          <button onclick="switchGame('8ball', 'stripes', this)">8-Ball Stripes</button>
+          <button class="sandbox-tab" onclick="switchGame('sandbox', 'lab', this)">🧪 Spin Lab</button>
+        </div>
+
+        <div class="rack-Nav" id="rackNavBox">
+          <button class="icon-btn" onclick="stepRack(-1)" title="Previous Rack">◀</button>
+          <select id="rackSelect" onchange="selectRack(parseInt(this.value))"></select>
+          <button class="icon-btn" onclick="stepRack(1)" title="Next Rack">▶</button>
+        </div>
+
+        <div class="segmented-tabs pov-tabs" id="povTabs" title="Choose how the table rotates so you shoot away from yourself">
+          <button class="active" onclick="setPOVMode('auto_flip', this)">Auto-Flip ↑</button>
+          <button onclick="setPOVMode('shooter', this)">Shooter Line ↑</button>
+          <button onclick="setPOVMode('fixed', this)">Fixed</button>
+        </div>
+
+        <button class="utility-btn" onclick="manualFlip180()" title="Flip table 180° (F)">↻ Flip</button>
+        <button class="utility-btn" id="gridToggleBtn" onclick="toggleGridCoords()"># Coords</button>
+        <button class="utility-btn" id="ballSizeBtn" onclick="cycleBallSize()" title="Cycle ball &amp; number size for easier viewing from your pool table">● Balls: Std</button>
+
+        <div class="cloth-dropdown-wrap" id="clothWrap">
+          <button class="utility-btn" onclick="toggleClothMenu(event)">
+            <span class="cloth-swatch-dot" id="activeClothDot" style="background:#164e87;"></span>
+            <span id="activeClothLabel">Cloth</span> ▾
+          </button>
+          <div class="cloth-menu" id="clothMenu"></div>
+        </div>
+
+        <button class="utility-btn expand-highlight-btn" id="expandToggleBtn" onclick="toggleExpandedMode()" title="Enlarge table &amp; compact panels to fit 100% on one Surface screen (E)">⛶ Expand Table</button>
+        <button class="utility-btn" id="fsBtn" onclick="toggleBrowserFullscreen()" title="Toggle Fullscreen (hides browser bars)">⛶</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="table-stage">
+      <canvas id="poolTable" width="1800" height="960"></canvas>
+
+      <div class="stance-row">
+        <div class="stance-banner" id="stanceBanner">
+          ▲ SHOOTING AWAY (↑) · Standing along P1–P2–P3 Rail
+        </div>
+        <div class="phase-chip" id="phaseChip">↻ Rotating Table — Get Ready...</div>
+      </div>
+
+      <div class="timeline-bar">
+        <div class="ball-stepper" id="ballStepper"></div>
+
+        <div class="legend-pills">
+          <div class="legend-pill">
+            <span class="legend-swatch" style="background:#facc15;"></span>
+            Coach Aim
+          </div>
+          <div class="legend-pill">
+            <span class="legend-swatch" style="background:#ef4444; box-shadow:0 0 6px #ef4444;"></span>
+            Squirt/Throw Miss
+          </div>
+          <div class="legend-pill">
+            <span class="legend-swatch" style="background:#94a3b8;"></span>
+            90° Tangent
+          </div>
+          <div class="legend-pill">
+            <span class="legend-swatch" style="background:#38bdf8;"></span>
+            Coach Leave
+          </div>
+          <div class="legend-pill">
+            <span class="legend-swatch" style="background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+            Green Spin Path
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bento-grid">
+      <!-- Card 1: Shot Command -->
+      <div class="glass-card">
+        <div class="shot-top-row">
+          <div class="shot-headline-group">
+            <div class="hero-ball-badge" id="heroBallBadge">⚪</div>
+            <div>
+              <div class="shot-kicker" id="shotKicker">RACK SETUP · BALL IN HAND</div>
+              <div class="shot-main-title" id="shotTitle">9-Ball Rack 1 — Table Layout</div>
+            </div>
+          </div>
+          <div class="target-pill-callout" id="targetCallout">BIH: A9</div>
+        </div>
+
+        <div class="coach-box" id="coachNotes">
+          <strong>Table Setup:</strong> Place all object balls at their coordinates. Click <strong>Start Run-Out</strong> to step through each shot facing away from you.
+        </div>
+
+        <div class="playback-bar" id="puzzlePlaybackBar">
+          <div class="btn-group-left">
+            <button class="ctrl-btn" onclick="resetRack()">⏮ Setup</button>
+            <button class="ctrl-btn" id="replayBtn" onclick="replayCurrentShot()">↺ Replay</button>
+            <button class="ctrl-btn" id="playBtn" onclick="toggleAutoPlay()">▶ Auto-Run</button>
+          </div>
+          <div class="btn-group-right">
+            <button class="ctrl-btn" id="prevBtn" onclick="prevStroke()">◀ Prev</button>
+            <button class="ctrl-btn cta-next" id="nextBtn" onclick="nextStroke()">Start Run-Out ▶</button>
+          </div>
+        </div>
+
+        <div class="playback-bar" id="sandboxPlaybackBar" style="display:none;">
+          <div class="btn-group-left">
+            <button class="ctrl-btn" onclick="addSandboxBlocker()">+ Blocker Ball</button>
+            <button class="ctrl-btn" onclick="clearSandboxBlockers()">Clear Blockers</button>
+            <button class="ctrl-btn" onclick="resetSandboxDefault()">↺ Reset Table</button>
+          </div>
+          <div class="btn-group-right">
+            <button class="ctrl-btn cta-next" onclick="animateSandboxShot()">▶ Shoot &amp; Roll</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Interactive Draggable Cue Tip Explorer & Object Ball Throw Readout -->
+      <div class="glass-card">
+        <div class="telemetry-top-bar">
+          <div class="telemetry-header">Interactive Cue Ball &amp; Squirt/Throw Lab</div>
+          <div class="explorer-top-btns">
+            <button class="explorer-chip-btn" id="aimCompBtn" onclick="toggleAimCompensation()" title="Toggle between keeping the exact same aim line (showing real squirt/throw misses!) vs adjusting aim for English">Aim: Fixed</button>
+            <button class="explorer-reset-btn" id="resetExplorerBtn" onclick="resetTipExplorer()">↺ Snap to Coach</button>
+          </div>
+        </div>
+
+        <div class="telemetry-split">
+          <div class="cue-widget-col">
+            <div class="cue-ball-widget" id="cueBallWidget" title="Drag the green dot to test Follow, Draw, and Left/Right English!">
+              <div class="cue-safe-ring"></div>
+              <span class="clock-num clock-12">12</span>
+              <span class="clock-num clock-3">3</span>
+              <span class="clock-num clock-6">6</span>
+              <span class="clock-num clock-9">9</span>
+              <div class="cue-tip-coach" id="cueCoachDot"></div>
+              <div class="cue-tip-explorer" id="cueExplorerDot"></div>
+            </div>
+            <span class="cue-hint-caption">Drag Green Dot!</span>
+          </div>
+
+          <div class="telemetry-metrics">
+            <div class="metric-row">
+              <div class="metric-top">
+                <span class="metric-name" id="tipModeLabel">Coach Tip (Red)</span>
+                <span class="metric-value" id="cueVal">Center Stun</span>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div class="metric-top">
+                <span class="metric-name">Power (Click 1–5)</span>
+                <span class="metric-value" id="powerVal">Power 3</span>
+              </div>
+              <div class="speed-segments" id="speedSegments">
+                <div class="speed-seg" onclick="setExplorerPower(1)"></div>
+                <div class="speed-seg" onclick="setExplorerPower(2)"></div>
+                <div class="speed-seg" onclick="setExplorerPower(3)"></div>
+                <div class="speed-seg" onclick="setExplorerPower(4)"></div>
+                <div class="speed-seg" onclick="setExplorerPower(5)"></div>
+              </div>
+            </div>
+
+            <div class="explorer-Readout" id="explorerReadout"></div>
+
+            <div class="sub-badges">
+              <div class="mini-stat-pill">Pocket: <span id="pocketVal">—</span></div>
+              <div class="mini-stat-pill">Cut: <span id="angleVal">—</span></div>
+              <div class="mini-stat-pill">Rails: <span id="railsVal">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Scorecard OR Sandbox Target Pocket Picker -->
+      <div class="glass-card card-tracker" id="scorecardPanel">
+        <div class="tracker-top">
+          <div>
+            <div class="telemetry-header">Table Scorecard</div>
+            <div class="tracker-subtitle" style="font-size:0.82rem; color:var(--text-secondary); margin-top:2px;">Pass goal: Run rack 2 of 5 tries</div>
+          </div>
+          <span class="status-chip" id="passChip">0 / 5 Run</span>
+        </div>
+
+        <div class="tries-grid" id="tryContainer">
+          <button class="try-slot" onclick="toggleTry(0)">T1</button>
+          <button class="try-slot" onclick="toggleTry(1)">T2</button>
+          <button class="try-slot" onclick="toggleTry(2)">T3</button>
+          <button class="try-slot" onclick="toggleTry(3)">T4</button>
+          <button class="try-slot" onclick="toggleTry(4)">T5</button>
+        </div>
+
+        <div class="mastery-footer">
+          <span id="disciplineMastery">Discipline Mastery: 0 / 25 Racks</span>
+          <button class="link-reset" onclick="resetTries()">Clear Rack</button>
+        </div>
+      </div>
+
+      <div class="glass-card card-tracker" id="sandboxPocketPanel" style="display:none;">
+        <div>
+          <div class="telemetry-header">Spin Lab Target Pocket</div>
+          <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">
+            Drag Cue Ball or 1-Ball on the felt, or pick a target pocket:
+          </div>
+        </div>
+
+        <div class="sandbox-pocket-grid" id="sbPocketGrid">
+          <button class="sb-pkt-btn" onclick="setSandboxPocket('P1')">P1</button>
+          <button class="sb-pkt-btn" onclick="setSandboxPocket('P2')">P2</button>
+          <button class="sb-pkt-btn active" onclick="setSandboxPocket('P3')">P3</button>
+          <button class="sb-pkt-btn" onclick="setSandboxPocket('P4')">P4</button>
+          <button class="sb-pkt-btn" onclick="setSandboxPocket('P5')">P5</button>
+          <button class="sb-pkt-btn" onclick="setSandboxPocket('P6')">P6</button>
+        </div>
+
+        <div class="mastery-footer">
+          <span>Red Arrow = Squirt/Throw Miss</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="data.js"></script>
+  <script>
+    const CLOTH_THEMES = [
+      { name: 'Tournament Blue',    main: '#164e87', center: '#1d63a8', edge: '#0e355e' },
+      { name: 'Simonis Green',      main: '#0f6841', center: '#158051', edge: '#09462b' },
+      { name: 'English Baize',      main: '#157f3b', center: '#1ea34e', edge: '#0c5225' },
+      { name: 'Electric TV Cyan',   main: '#0c6980', center: '#1287a3', edge: '#074454' },
+      { name: 'Predator Shark Grey',main: '#334155', center: '#475569', edge: '#1e293b' },
+      { name: 'Admiral Navy',       main: '#172554', center: '#1e3a8a', edge: '#0f172a' },
+      { name: 'Burgundy Wine',      main: '#6b1626', center: '#881d31', edge: '#470d18' },
+      { name: 'Tournament Red',     main: '#991b1b', center: '#b91c1c', edge: '#691010' },
+      { name: 'Royal Violet',       main: '#4c1d95', center: '#6d28d9', edge: '#2e1065' },
+      { name: 'Deep Petrol Teal',   main: '#115e59', center: '#0f766e', edge: '#093835' },
+      { name: 'Championship Gold',  main: '#855a1f', center: '#a37029', edge: '#593b12' },
+      { name: 'Stealth Obsidian',   main: '#18181b', center: '#27272a', edge: '#09090b' }
+    ];
+
+    let currentGame = '9ball';
+    let currentSubset = 'rot';
+    let currentRackNum = 1;
+    let currentStrokeIdx = 0;
+    let clothIdx = 0;
+    let showGridCoords = false;
+    let expandedMode = false;
+    const BALL_SIZE_MODES = [
+      { key: 'std', label: 'Std', scale: 1.0 },
+      { key: 'lg',  label: 'Lg',  scale: 1.30 },
+      { key: 'xl',  label: 'XL',  scale: 1.56 }
+    ];
+    let ballSizeIdx = 0;
+    let hoveredBallInfo = null;
+    let isAutoRunning = false;
+    let autoNextTimer = null;
+    let preShotDelayTimer = null;
+    let tryData = {};
+
+    // Camera POV Rotation State
+    let povMode = 'auto_flip';
+    let cameraAngle = 0;
+    let targetCameraAngle = 0;
+    let camAnimFrame = null;
+
+    // Interactive Tip Explorer State
+    let explorerActive = false;
+    let explorerTip = { x: 0, y: 0 };
+    let explorerPower = 3;
+    let compensateSquirt = false; // false = Fixed Aim (shows real squirt/throw miss!), true = Adjusted Aim
+    let draggingTip = false;
+
+    // Spin Lab State
+    let sandboxState = {
+      cue: { x: 18, y: 18 },
+      obj: { x: 34, y: 9 },
+      pocket: 'P3',
+      blockers: [{ number: 8, x: 31, y: 15 }]
+    };
+    let draggingCanvasItem = null;
+
+    // Shot Animation State
+    let animFrame = null;
+    let animProgress = 1.0;
+    let isAnimating = false;
+    let sandboxSimCache = null;
+
+    const canvas = document.getElementById('poolTable');
+    const ctx = canvas.getContext('2d');
+    const CX = canvas.width / 2;   // 900
+    const CY = canvas.height / 2;  // 480
+
+    const T = {
+      frameX: 64,
+      frameY: 50,
+      frameW: 1672,
+      frameH: 860,
+      feltX: 136,
+      feltY: 122,
+      feltW: 1528,
+      feltH: 716,
+      ballR: 17.5
+    };
+
+    const POCKETS = {
+      P1: { x: T.feltX + 6,           y: T.feltY + 6,           gx: 0.5,  gy: 0.5,  badgeX: T.frameX + 30,            badgeY: T.frameY + 28,            type: 'Corner' },
+      P2: { x: T.feltX + T.feltW / 2, y: T.feltY - 4,           gx: 25.5, gy: 0.2,  badgeX: T.feltX + T.feltW / 2,    badgeY: T.frameY + 24,            type: 'Side' },
+      P3: { x: T.feltX + T.feltW - 6, y: T.feltY + 6,           gx: 50.5, gy: 0.5,  badgeX: T.frameX + T.frameW - 30, badgeY: T.frameY + 28,            type: 'Corner' },
+      P4: { x: T.feltX + 6,           y: T.feltY + T.feltH - 6, gx: 0.5,  gy: 26.5, badgeX: T.frameX + 30,            badgeY: T.frameY + T.frameH - 28, type: 'Corner' },
+      P5: { x: T.feltX + T.feltW / 2, y: T.feltY + T.feltH + 4, gx: 25.5, gy: 26.8, badgeX: T.feltX + T.feltW / 2,    badgeY: T.frameY + T.frameH - 24, type: 'Side' },
+      P6: { x: T.feltX + T.feltW - 6, y: T.feltY + T.feltH - 6, gx: 50.5, gy: 26.5, badgeX: T.frameX + T.frameW - 30, badgeY: T.frameY + T.frameH - 28, type: 'Corner' }
+    };
+
+    const BALL_PALETTE = {
+      1: '#facc15', 2: '#2563eb', 3: '#ef4444', 4: '#7c3aed',
+      5: '#f97316', 6: '#16a34a', 7: '#881337', 8: '#090d16',
+      9: '#facc15', 10: '#2563eb', 11: '#ef4444', 12: '#7c3aed',
+      13: '#f97316', 14: '#16a34a', 15: '#881337'
+    };
+
+    // ==================== COORDINATE CONVERSIONS ====================
+    function gridXYToPx(gx, gy) {
+      const padX = 28, padY = 26;
+      const stepX = (T.feltW - 2 * padX) / 49;
+      const stepY = (T.feltH - 2 * padY) / 25;
+      return {
+        x: T.feltX + padX + (gx - 1) * stepX,
+        y: T.feltY + padY + (gy - 1) * stepY
+      };
+    }
+
+    function pxToGridXY(wx, wy) {
+      const padX = 28, padY = 26;
+      const stepX = (T.feltW - 2 * padX) / 49;
+      const stepY = (T.feltH - 2 * padY) / 25;
+      return {
+        x: Math.max(1.6, Math.min(49.4, 1 + (wx - T.feltX - padX) / stepX)),
+        y: Math.max(1.6, Math.min(25.4, 1 + (wy - T.feltY - padY) / stepY))
+      };
+    }
+
+    function parseGridCoord(coord) {
+      if (!coord || coord === 'Rack over') return null;
+      return {
+        x: parseFloat(coord.slice(1)),
+        y: coord[0].toUpperCase().charCodeAt(0) - 64
+      };
+    }
+
+    function formatGridCoord(gx, gy) {
+      const c = Math.max(1, Math.min(50, Math.round(gx)));
+      const r = Math.max(1, Math.min(26, Math.round(gy)));
+      return String.fromCharCode(64 + r) + c;
+    }
+
+    function gridToPx(coord) {
+      const g = parseGridCoord(coord);
+      return g ? gridXYToPx(g.x, g.y) : null;
+    }
+
+    function getCameraScale(angleRad) {
+      const ca = Math.abs(Math.cos(angleRad));
+      const sa = Math.abs(Math.sin(angleRad));
+      if (sa < 0.01) return expandedMode ? 1.052 : 1.0;
+      const rotW = (T.frameW + 40) * ca + (T.frameH + 40) * sa;
+      const rotH = (T.frameW + 40) * sa + (T.frameH + 40) * ca;
+      return Math.min(expandedMode ? 1.052 : 1.0, (expandedMode ? 1775 : 1740) / rotW, (expandedMode ? 935 : 910) / rotH);
+    }
+
+    function getVisualBallRadius(camScale) {
+      return T.ballR * BALL_SIZE_MODES[ballSizeIdx].scale * camScale;
+    }
+
+    function worldToScreen(wx, wy) {
+      const s = getCameraScale(cameraAngle);
+      const dx = wx - CX, dy = wy - CY;
+      const cosA = Math.cos(cameraAngle), sinA = Math.sin(cameraAngle);
+      return {
+        x: CX + s * (dx * cosA - dy * sinA),
+        y: CY + s * (dx * sinA + dy * cosA),
+        scale: s
+      };
+    }
+
+    function screenToWorld(sx, sy) {
+      const s = getCameraScale(cameraAngle);
+      const dx = (sx - CX) / s, dy = (sy - CY) / s;
+      const cosA = Math.cos(-cameraAngle), sinA = Math.sin(-cameraAngle);
+      return {
+        x: CX + (dx * cosA - dy * sinA),
+        y: CY + (dx * sinA + dy * cosA)
+      };
+    }
+
+    // ==================== UNIFIED SQUIRT, THROW, OBJECT-BALL & CUE-BALL PHYSICS ====================
+    function simulateWhatIfShot(cbG, obG, pktKey, tipX, tipY, powerLvl, obstaclesG) {
+      const R = 0.5625;
+      const pkt = POCKETS[pktKey];
+      if (!pkt || !cbG || !obG) return null;
+
+      // 1. Ideal Ghost Ball for Target Pocket
+      const oxIdeal = pkt.gx - obG.x, oyIdeal = pkt.gy - obG.y;
+      const olenIdeal = Math.hypot(oxIdeal, oyIdeal);
+      if (olenIdeal < 0.01) return null;
+      const ouxIdeal = oxIdeal / olenIdeal, ouyIdeal = oyIdeal / olenIdeal;
+
+      const idealGhost = { x: obG.x - ouxIdeal * 2 * R, y: obG.y - ouyIdeal * 2 * R };
+      const cxAim = idealGhost.x - cbG.x, cyAim = idealGhost.y - cbG.y;
+      const clenAim = Math.hypot(cxAim, cyAim);
+      if (clenAim < 0.3) return null;
+      const cuxAim = cxAim / clenAim, cuyAim = cyAim / clenAim;
+
+      const dotIdeal = Math.max(-1, Math.min(1, cuxAim * ouxIdeal + cuyAim * ouyIdeal));
+      const idealCutDeg = (Math.acos(dotIdeal) * 180) / Math.PI;
+      if (idealCutDeg > 78) return { impossibleCut: true, ghost: idealGhost, cutDeg: idealCutDeg };
+
+      // 2. Cue-Ball Squirt (Deflection) & Spin-Induced Throw (SIT) when Aim is Fixed!
+      let actualGhost = idealGhost;
+      let cux = cuxAim, cuy = cuyAim;
+      let oux = ouxIdeal, ouy = ouyIdeal;
+      let squirtDeg = 0;
+      let throwDeg = 0;
+
+      if (!compensateSquirt && Math.abs(tipX) > 0.04) {
+        // Right English (tipX > 0) squirts cue ball to shooter's LEFT (negative angle in world (x,y))
+        squirtDeg = -tipX * (1.35 + 0.44 * powerLvl);
+        const sqRad = (squirtDeg * Math.PI) / 180;
+        const sqVx = cuxAim * Math.cos(sqRad) - cuyAim * Math.sin(sqRad);
+        const sqVy = cuxAim * Math.sin(sqRad) + cuyAim * Math.cos(sqRad);
+
+        // Ray-sphere intersection from cbG along (sqVx, sqVy) against sphere (obG, 2*R)
+        const fx = cbG.x - obG.x, fy = cbG.y - obG.y;
+        const bQuad = 2 * (fx * sqVx + fy * sqVy);
+        const cQuad = (fx * fx + fy * fy) - (2 * R) * (2 * R);
+        const disc = bQuad * bQuad - 4 * cQuad;
+
+        if (disc < 0) {
+          // Cue ball squirted past the edge of the object ball (complete whiff!)
+          const missRayEnd = rayToCushion(cbG.x, cbG.y, sqVx, sqVy);
+          return {
+            impossibleCut: false,
+            whiffedObjectBall: true,
+            ghost: idealGhost,
+            cutDeg: idealCutDeg,
+            squirtDeg,
+            whiffPath: [{ x: cbG.x, y: cbG.y }, missRayEnd]
+          };
+        }
+
+        const tHit = (-bQuad - Math.sqrt(disc)) / 2;
+        if (tHit > 0.1) {
+          actualGhost = { x: cbG.x + sqVx * tHit, y: cbG.y + sqVy * tHit };
+          cux = sqVx; cuy = sqVy;
+          // Geometric line-of-centers from actual contact point
+          const lox = obG.x - actualGhost.x, loy = obG.y - actualGhost.y;
+          const loLen = Math.hypot(lox, loy) || 1;
+          const geomOux = lox / loLen, geomOuy = loy / loLen;
+
+          // Spin-Induced Throw (Right English throws OB left; stronger at softer speeds)
+          throwDeg = -tipX * (2.4 - 0.28 * powerLvl);
+          const thRad = (throwDeg * Math.PI) / 180;
+          oux = geomOux * Math.cos(thRad) - geomOuy * Math.sin(thRad);
+          ouy = geomOux * Math.sin(thRad) + geomOuy * Math.cos(thRad);
+        }
+      }
+
+      // 3. Trace Resulting Target Object-Ball Path (Does it Pocket, Hit a Ball, or Hit a Rail & Miss?!)
+      const obResult = traceObjectBallOutcome(obG, oux, ouy, pktKey, obstaclesG);
+
+      // 4. 90° Pure Tangent Line from Actual Contact Ghost Ball
+      const dotActual = Math.max(-1, Math.min(1, cux * oux + cuy * ouy));
+      const cutRad = Math.acos(dotActual);
+      const cutDeg = (cutRad * 180) / Math.PI;
+
+      const t1 = { x: -ouy, y: oux };
+      const t2 = { x: ouy, y: -oux };
+      const tang = (cux * t1.x + cuy * t1.y) >= 0 ? t1 : t2;
+      const tangentEnd = rayToCushion(actualGhost.x, actualGhost.y, tang.x, tang.y);
+
+      // 5. Simulate Cue Ball Post-Impact Curve & Multi-Rail English Rebounds
+      const speedMap = { 1: 6.5, 2: 12.5, 3: 20.5, 4: 29.5, 5: 40.0 };
+      const baseSpeed = speedMap[powerLvl] || 20.5;
+      const sinC = Math.sin(cutRad);
+      const spinStrength = Math.abs(tipY);
+      const spinSign = -tipY;
+
+      const tangRetention = Math.max(0.18, sinC);
+      let remDist = baseSpeed * (0.42 * tangRetention + 0.68 * Math.max(tangRetention, spinStrength * 0.9));
+      if (cutDeg < 6 && spinStrength < 0.15) {
+        remDist = Math.min(2.0, baseSpeed * 0.1);
+      }
+
+      let vx = tang.x * Math.max(0.12, sinC) + oux * (spinSign * spinStrength * (1.05 - 0.45 * sinC));
+      let vy = tang.y * Math.max(0.12, sinC) + ouy * (spinSign * spinStrength * (1.05 - 0.45 * sinC));
+      const vLen = Math.hypot(vx, vy) || 1;
+      vx /= vLen; vy /= vLen;
+
+      let curX = actualGhost.x, curY = actualGhost.y;
+      let curVx = cutDeg < 4 ? vx : tang.x;
+      let curVy = cutDeg < 4 ? vy : tang.y;
+
+      const minX = 1.0 + R, maxX = 50.0 - R, minY = 1.0 + R, maxY = 26.0 - R;
+      const path = [{ x: curX, y: curY }];
+      let english = tipX;
+      let bounces = 0;
+      let hitBall = null;
+      let scratchedPocket = null;
+      const dtStep = 0.45;
+      let traveled = 0;
+      let curvePhaseActive = (cutDeg >= 4 && spinStrength > 0.08);
+
+      while (remDist > 0.05 && bounces <= 4) {
+        if (curvePhaseActive && traveled < 6.5) {
+          const blend = 0.24;
+          curVx = curVx * (1 - blend) + vx * blend;
+          curVy = curVy * (1 - blend) + vy * blend;
+          const l = Math.hypot(curVx, curVy) || 1;
+          curVx /= l; curVy /= l;
+        }
+
+        const step = Math.min(dtStep, remDist);
+        let nx = curX + curVx * step;
+        let ny = curY + curVy * step;
+
+        let hitNormal = null;
+        if (nx <= minX) { nx = minX; curVx = Math.abs(curVx); hitNormal = { x: 1, y: 0 }; }
+        else if (nx >= maxX) { nx = maxX; curVx = -Math.abs(curVx); hitNormal = { x: -1, y: 0 }; }
+
+        if (ny <= minY) { ny = minY; curVy = Math.abs(curVy); hitNormal = { x: 0, y: 1 }; }
+        else if (ny >= maxY) { ny = maxY; curVy = -Math.abs(curVy); hitNormal = { x: 0, y: -1 }; }
+
+        for (const [pkName, pk] of Object.entries(POCKETS)) {
+          if (Math.hypot(nx - pk.gx, ny - pk.gy) < 1.85) {
+            scratchedPocket = pkName;
+            path.push({ x: pk.gx, y: pk.gy });
+            remDist = 0;
+            break;
+          }
+        }
+        if (scratchedPocket) break;
+
+        if (hitNormal) {
+          bounces++;
+          curvePhaseActive = false;
+          const railRightX = hitNormal.y;
+          const railRightY = -hitNormal.x;
+          const throwFactor = english * 0.44;
+          curVx += railRightX * throwFactor;
+          curVy += railRightY * throwFactor;
+          const dotIn = curVx * hitNormal.x + curVy * hitNormal.y;
+          if (dotIn < 0.18) {
+            curVx += hitNormal.x * (0.20 - dotIn);
+            curVy += hitNormal.y * (0.20 - dotIn);
+          }
+          const nl = Math.hypot(curVx, curVy) || 1;
+          curVx /= nl; curVy /= nl;
+          english *= 0.52;
+          remDist *= 0.80;
+        }
+
+        for (const obs of obstaclesG) {
+          if (Math.hypot(nx - obs.x, ny - obs.y) < 2 * R + 0.06) {
+            hitBall = obs.number;
+            path.push({ x: nx, y: ny });
+            remDist = 0;
+            break;
+          }
+        }
+        if (hitBall !== null) break;
+
+        curX = nx; curY = ny;
+        traveled += step;
+        remDist -= step;
+        path.push({ x: curX, y: curY });
+      }
+
+      return {
+        impossibleCut: false,
+        whiffedObjectBall: false,
+        ghost: actualGhost,
+        idealGhost,
+        cutDeg,
+        squirtDeg,
+        throwDeg,
+        obResult,
+        tangentEnd,
+        path,
+        endGrid: { x: curX, y: curY },
+        endCoord: formatGridCoord(curX, curY),
+        bounces,
+        hitBall,
+        scratchedPocket
+      };
+    }
+
+    // Raycast Object Ball to see if it drops in Target Pocket or misses & rebounds off rail!
+    function traceObjectBallOutcome(obG, oux, ouy, targetPktKey, obstaclesG) {
+      const R = 0.5625;
+      const minX = 1.0 + R, maxX = 50.0 - R, minY = 1.0 + R, maxY = 26.0 - R;
+      let x = obG.x, y = obG.y;
+      let vx = oux, vy = ouy;
+      const step = 0.35;
+      const obPath = [{ x, y }];
+
+      for (let iter = 0; iter < 180; iter++) {
+        x += vx * step;
+        y += vy * step;
+
+        // Check obstacle collision first
+        for (const obs of obstaclesG) {
+          if (Math.hypot(x - obs.x, y - obs.y) < 2 * R) {
+            obPath.push({ x, y });
+            return { madeTarget: false, reason: `Blocked by #${obs.number}-Ball`, path: obPath, railHitPt: { x, y } };
+          }
+        }
+
+        // Check pocket capture!
+        for (const [pkName, pk] of Object.entries(POCKETS)) {
+          const pocketMouth = pk.type === 'Side' ? 1.55 : 1.78;
+          if (Math.hypot(x - pk.gx, y - pk.gy) <= pocketMouth) {
+            obPath.push({ x: pk.gx, y: pk.gy });
+            if (pkName === targetPktKey) {
+              return { madeTarget: true, pocketedIn: pkName, path: obPath };
+            } else {
+              return { madeTarget: false, reason: `Slops into ${pkName}`, path: obPath, railHitPt: null };
+            }
+          }
+        }
+
+        // Check cushion impact (Missed the pocket!)
+        let hitRailName = null;
+        if (x <= minX) { x = minX; vx = Math.abs(vx); hitRailName = 'Rail'; }
+        else if (x >= maxX) { x = maxX; vx = -Math.abs(vx); hitRailName = 'Rail'; }
+        if (y <= minY) { y = minY; vy = Math.abs(vy); hitRailName = 'Rail'; }
+        else if (y >= maxY) { y = maxY; vy = -Math.abs(vy); hitRailName = 'Rail'; }
+
+        if (hitRailName) {
+          const railHitPt = { x, y };
+          obPath.push(railHitPt);
+          // Trace rebound off the rail (~10 grid units out onto the cloth) so user sees the rattle/bounce!
+          const rebX = Math.max(minX, Math.min(maxX, x + vx * 10.5));
+          const rebY = Math.max(minY, Math.min(maxY, y + vy * 10.5));
+          obPath.push({ x: rebX, y: rebY });
+          return {
+            madeTarget: false,
+            reason: `Misses ${targetPktKey} (Hits Rail)`,
+            path: obPath,
+            railHitPt
+          };
+        }
+      }
+
+      obPath.push({ x, y });
+      return { madeTarget: false, reason: `Misses ${targetPktKey}`, path: obPath, railHitPt: null };
+    }
+
+    function rayToCushion(gx, gy, dx, dy) {
+      const R = 0.5625;
+      const minX = 1.0 + R, maxX = 50.0 - R, minY = 1.0 + R, maxY = 26.0 - R;
+      let tx = Infinity, ty = Infinity;
+      if (dx > 1e-5) tx = (maxX - gx) / dx;
+      else if (dx < -1e-5) tx = (minX - gx) / dx;
+      if (dy > 1e-5) ty = (maxY - gy) / dy;
+      else if (dy < -1e-5) ty = (minY - gy) / dy;
+      const t = Math.max(0, Math.min(tx, ty));
+      return { x: gx + dx * t, y: gy + dy * t };
+    }
+
+    // ==================== CAMERA ROTATION & CHOREOGRAPHED DELAY ====================
+    // Returns rotation duration (ms) needed so shot animation can wait for rotation + settle pause!
+    function computeDesiredCameraAngle(instant = false) {
+      if (povMode === 'fixed') {
+        return animateCameraTo(targetCameraAngle, instant);
+      }
+
+      let cuePos, ghostPos, objPos, pktPos;
+      if (currentGame === 'sandbox') {
+        cuePos = gridXYToPx(sandboxState.cue.x, sandboxState.cue.y);
+        objPos = gridXYToPx(sandboxState.obj.x, sandboxState.obj.y);
+        ghostPos = objPos;
+        pktPos = POCKETS[sandboxState.pocket];
+      } else {
+        const strokes = getStrokes();
+        if (!strokes.length) return 0;
+        const refIdx = currentStrokeIdx === 0 ? 1 : currentStrokeIdx;
+        const stroke = strokes[refIdx - 1];
+        if (!stroke) return 0;
+        const startCueCoord = refIdx === 1 ? getActiveBIH() : strokes[refIdx - 2].leave;
+        cuePos = gridToPx(startCueCoord);
+        objPos = gridToPx(stroke.obj || stroke.coord);
+        ghostPos = stroke.ghost ? gridXYToPx(stroke.ghost[0], stroke.ghost[1]) : objPos;
+        pktPos = POCKETS[stroke.pocket];
+      }
+      if (!cuePos || !ghostPos || !pktPos) return 0;
+
+      const c2gX = ghostPos.x - cuePos.x, c2gY = ghostPos.y - cuePos.y;
+      const c2gLen = Math.hypot(c2gX, c2gY) || 1;
+      const o2pX = pktPos.x - objPos.x, o2pY = pktPos.y - objPos.y;
+      const o2pLen = Math.hypot(o2pX, o2pY) || 1;
+
+      if (povMode === 'shooter') {
+        return animateCameraTo(Math.atan2(-c2gX, -c2gY), instant);
+      } else {
+        const blendY = (c2gY / c2gLen) * 0.6 + (o2pY / o2pLen) * 0.4;
+        let desired = targetCameraAngle;
+        if (blendY > 0.04) desired = Math.PI;
+        else if (blendY < -0.04) desired = 0;
+        return animateCameraTo(desired, instant);
+      }
+    }
+
+    function animateCameraTo(newTarget, instant = false) {
+      const diff = Math.atan2(Math.sin(newTarget - cameraAngle), Math.cos(newTarget - cameraAngle));
+      targetCameraAngle = cameraAngle + diff;
+      if (camAnimFrame) { cancelAnimationFrame(camAnimFrame); camAnimFrame = null; }
+
+      if (instant || Math.abs(diff) < 0.015) {
+        cameraAngle = targetCameraAngle;
+        updateStanceBanner();
+        render();
+        return 0; // No camera rotation needed
+      }
+
+      const startAng = cameraAngle;
+      const startTime = performance.now();
+      const duration = 680; // Smooth 680ms table rotation
+
+      function stepCam(now) {
+        const t = Math.min(1, (now - startTime) / duration);
+        // Smooth ease-in-out cubic
+        const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        cameraAngle = startAng + diff * ease;
+        updateStanceBanner();
+        render();
+        if (t < 1) {
+          camAnimFrame = requestAnimationFrame(stepCam);
+        } else {
+          cameraAngle = targetCameraAngle;
+          camAnimFrame = null;
+          updateStanceBanner();
+          render();
+        }
+      }
+      camAnimFrame = requestAnimationFrame(stepCam);
+      return duration;
+    }
+
+    function setPOVMode(mode, btnEl) {
+      povMode = mode;
+      document.querySelectorAll('#povTabs button').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      if (mode === 'fixed') animateCameraTo(0, false);
+      else computeDesiredCameraAngle(false);
+      updateHUD();
+    }
+
+    function manualFlip180() {
+      if (povMode !== 'fixed') {
+        povMode = 'fixed';
+        const tabs = document.querySelectorAll('#povTabs button');
+        tabs.forEach(b => b.classList.remove('active'));
+        tabs[2].classList.add('active');
+      }
+      animateCameraTo(targetCameraAngle + Math.PI, false);
+      updateHUD();
+    }
+
+    function updateStanceBanner() {
+      const banner = document.getElementById('stanceBanner');
+      const norm = Math.atan2(Math.sin(cameraAngle), Math.cos(cameraAngle));
+      const deg = Math.round((norm * 180) / Math.PI);
+      if (povMode === 'shooter') {
+        banner.textContent = `▲ FIRST-PERSON SHOOTER POV · Aiming Straight Away (↑ 12 o'clock)`;
+      } else if (Math.abs(deg) > 90) {
+        banner.textContent = `▲ SHOOTING AWAY (↑) · Standing along P1–P2–P3 Rail (Looking toward P4–P5–P6)`;
+      } else {
+        banner.textContent = `▲ SHOOTING AWAY (↑) · Standing along P4–P5–P6 Rail (Looking toward P1–P2–P3)`;
+      }
+    }
+
+    function setPhaseChip(text) {
+      const chip = document.getElementById('phaseChip');
+      if (!text) {
+        chip.classList.remove('visible');
+      } else {
+        chip.textContent = text;
+        chip.classList.add('visible');
+      }
+    }
+
+    function getRelativePocketDesc(pktKey) {
+      const p = POCKETS[pktKey];
+      const sp = worldToScreen(p.x, p.y);
+      const vPart = sp.y < CY - 60 ? 'Far' : (sp.y > CY + 60 ? 'Near' : 'Mid');
+      if (p.type === 'Side') {
+        if (Math.abs(sp.x - CX) > 120) return `${sp.x < CX ? 'Left' : 'Right'} Side`;
+        return `${vPart} Side`;
+      }
+      return `${vPart}-${sp.x < CX ? 'Left' : 'Right'}`;
+    }
+
+    // ==================== INITIALIZATION & CONTROLS ====================
+    function init() {
+      const sel = document.getElementById('rackSelect');
+      sel.innerHTML = '';
+      for (let r = 1; r <= 25; r++) {
+        const opt = document.createElement('option');
+        opt.value = r;
+        opt.textContent = `Rack ${r} of 25`;
+        sel.appendChild(opt);
+      }
+
+      buildClothPaletteMenu();
+      loadViewPrefs();
+      setupCueBallTipDrag();
+      setupCanvasSandboxDrag();
+      loadTries();
+      selectRack(1, true);
+
+      window.addEventListener('keydown', (e) => {
+        if (currentGame !== 'sandbox') {
+          if (e.key === 'ArrowRight') nextStroke();
+          else if (e.key === 'ArrowLeft') prevStroke();
+          else if (e.key === 'r' || e.key === 'R') resetRack();
+        }
+        if (e.key === 'f' || e.key === 'F') manualFlip180();
+        else if (e.key === 'e' || e.key === 'E') toggleExpandedMode();
+      });
+
+      document.addEventListener('fullscreenchange', () => {
+        const fsBtn = document.getElementById('fsBtn');
+        if (fsBtn) fsBtn.classList.toggle('active-toggle', !!document.fullscreenElement);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!document.getElementById('clothWrap').contains(e.target)) {
+          document.getElementById('clothMenu').classList.remove('open');
+        }
+      });
+    }
+
+    function loadViewPrefs() {
+      try {
+        if (localStorage.getItem('cuelab_expanded') === '1') {
+          expandedMode = true;
+          document.body.classList.add('expanded-mode');
+        }
+        const savedBS = localStorage.getItem('cuelab_ball_size');
+        if (savedBS !== null) {
+          ballSizeIdx = Math.max(0, Math.min(BALL_SIZE_MODES.length - 1, parseInt(savedBS)));
+        }
+      } catch (e) {}
+      syncViewPrefButtons();
+    }
+
+    function syncViewPrefButtons() {
+      const expBtn = document.getElementById('expandToggleBtn');
+      if (expBtn) {
+        expBtn.classList.toggle('active-toggle', expandedMode);
+        expBtn.textContent = expandedMode ? '🗖 Standard View' : '⛶ Expand Table';
+      }
+      const bsBtn = document.getElementById('ballSizeBtn');
+      if (bsBtn) {
+        bsBtn.textContent = `● Balls: ${BALL_SIZE_MODES[ballSizeIdx].label}`;
+        bsBtn.classList.toggle('active-toggle', ballSizeIdx > 0);
+      }
+    }
+
+    function toggleExpandedMode() {
+      expandedMode = !expandedMode;
+      document.body.classList.toggle('expanded-mode', expandedMode);
+      try { localStorage.setItem('cuelab_expanded', expandedMode ? '1' : '0'); } catch (e) {}
+      syncViewPrefButtons();
+      render();
+    }
+
+    function toggleBrowserFullscreen() {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function cycleBallSize() {
+      ballSizeIdx = (ballSizeIdx + 1) % BALL_SIZE_MODES.length;
+      try { localStorage.setItem('cuelab_ball_size', String(ballSizeIdx)); } catch (e) {}
+      syncViewPrefButtons();
+      render();
+    }
+
+    function buildClothPaletteMenu() {
+      try {
+        const savedCloth = localStorage.getItem('cuelab_cloth_idx');
+        if (savedCloth !== null) clothIdx = Math.max(0, Math.min(CLOTH_THEMES.length - 1, parseInt(savedCloth)));
+      } catch (e) {}
+
+      const menu = document.getElementById('clothMenu');
+      menu.innerHTML = '';
+      CLOTH_THEMES.forEach((th, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'cloth-option' + (idx === clothIdx ? ' selected' : '');
+        btn.innerHTML = `
+          <span class="cloth-opt-left">
+            <span class="cloth-swatch-dot" style="background:${th.center};"></span>
+            <span>${th.name}</span>
+          </span>
+          <span>${idx === clothIdx ? '✓' : ''}</span>
+        `;
+        btn.onclick = () => selectClothTheme(idx);
+        menu.appendChild(btn);
+      });
+      document.getElementById('activeClothDot').style.background = CLOTH_THEMES[clothIdx].center;
+    }
+
+    function toggleClothMenu(e) {
+      e.stopPropagation();
+      document.getElementById('clothMenu').classList.toggle('open');
+    }
+
+    function selectClothTheme(idx) {
+      clothIdx = idx;
+      try { localStorage.setItem('cuelab_cloth_idx', String(idx)); } catch (e) {}
+      buildClothPaletteMenu();
+      document.getElementById('clothMenu').classList.remove('open');
+      render();
+    }
+
+    function toggleAimCompensation() {
+      compensateSquirt = !compensateSquirt;
+      const btn = document.getElementById('aimCompBtn');
+      btn.textContent = compensateSquirt ? 'Aim: Adjusted' : 'Aim: Fixed';
+      btn.classList.toggle('active-comp', compensateSquirt);
+      updateHUD();
+      render();
+    }
+
+    function setupCueBallTipDrag() {
+      const widget = document.getElementById('cueBallWidget');
+
+      function updateFromPointer(e) {
+        const rect = widget.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const maxR = (rect.width / 2) * 0.72;
+        let dx = (e.clientX - cx) / maxR;
+        let dy = (e.clientY - cy) / maxR;
+        const mag = Math.hypot(dx, dy);
+        if (mag > 1) { dx /= mag; dy /= mag; }
+
+        explorerTip = { x: dx, y: dy };
+        explorerActive = true;
+        if (currentGame !== 'sandbox' && currentStrokeIdx === 0) {
+          currentStrokeIdx = 1;
+          buildTimeline();
+        }
+        cancelAnim();
+        positionExplorerDot();
+        updateHUD();
+        render();
+      }
+
+      widget.addEventListener('pointerdown', (e) => {
+        draggingTip = true;
+        widget.setPointerCapture(e.pointerId);
+        updateFromPointer(e);
+      });
+      widget.addEventListener('pointermove', (e) => {
+        if (!draggingTip) return;
+        updateFromPointer(e);
+      });
+      widget.addEventListener('pointerup', () => { draggingTip = false; });
+      widget.addEventListener('pointercancel', () => { draggingTip = false; });
+    }
+
+    function positionExplorerDot() {
+      const expDot = document.getElementById('cueExplorerDot');
+      expDot.style.left = `${50 + explorerTip.x * 32}%`;
+      expDot.style.top = `${50 + explorerTip.y * 32}%`;
+    }
+
+    function snapExplorerToCoachStroke(stroke) {
+      explorerActive = false;
+      if (!stroke) {
+        explorerTip = { x: 0, y: 0 };
+        explorerPower = 3;
+      } else {
+        explorerPower = parseInt(stroke.power) || 3;
+        const sp = stroke.spin_type;
+        if (sp === 'follow' || stroke.cue === 12) explorerTip = { x: 0, y: sp === 'stun_follow' ? -0.52 : -0.88 };
+        else if (sp === 'draw' || sp === 'stun_draw' || stroke.cue === 6) explorerTip = { x: 0, y: sp === 'stun_draw' ? 0.52 : 0.88 };
+        else explorerTip = { x: 0, y: 0 };
+      }
+      positionExplorerDot();
+    }
+
+    function resetTipExplorer() {
+      if (currentGame === 'sandbox') {
+        explorerTip = { x: 0, y: 0 };
+        explorerPower = 3;
+        positionExplorerDot();
+        updateHUD();
+        render();
+        return;
+      }
+      const strokes = getStrokes();
+      snapExplorerToCoachStroke(currentStrokeIdx > 0 ? strokes[currentStrokeIdx - 1] : null);
+      updateHUD();
+      render();
+    }
+
+    function setExplorerPower(pwr) {
+      explorerPower = pwr;
+      if (currentGame !== 'sandbox') {
+        explorerActive = true;
+        if (currentStrokeIdx === 0) {
+          currentStrokeIdx = 1;
+          buildTimeline();
+        }
+      }
+      cancelAnim();
+      updateHUD();
+      render();
+    }
+
+    function setupCanvasSandboxDrag() {
+      function getCanvasScreenPt(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: ((e.clientX - rect.left) / rect.width) * canvas.width,
+          y: ((e.clientY - rect.top) / rect.height) * canvas.height
+        };
+      }
+
+      canvas.addEventListener('pointerdown', (e) => {
+        const sPt = getCanvasScreenPt(e);
+        if (currentGame !== 'sandbox') {
+          const hit = findBallUnderScreenPt(sPt);
+          hoveredBallInfo = (hoveredBallInfo && hit && hoveredBallInfo.key === hit.key) ? null : hit;
+          render();
+          return;
+        }
+
+        for (const [pkKey, p] of Object.entries(POCKETS)) {
+          const spHole = worldToScreen(p.x, p.y);
+          const spBadge = worldToScreen(p.badgeX, p.badgeY);
+          if (Math.hypot(sPt.x - spHole.x, sPt.y - spHole.y) < 36 || Math.hypot(sPt.x - spBadge.x, sPt.y - spBadge.y) < 34) {
+            setSandboxPocket(pkKey);
+            return;
+          }
+        }
+
+        const cueW = gridXYToPx(sandboxState.cue.x, sandboxState.cue.y);
+        const cueS = worldToScreen(cueW.x, cueW.y);
+        if (Math.hypot(sPt.x - cueS.x, sPt.y - cueS.y) < 34) {
+          draggingCanvasItem = 'cue';
+          canvas.setPointerCapture(e.pointerId);
+          cancelAnim();
+          return;
+        }
+
+        const objW = gridXYToPx(sandboxState.obj.x, sandboxState.obj.y);
+        const objS = worldToScreen(objW.x, objW.y);
+        if (Math.hypot(sPt.x - objS.x, sPt.y - objS.y) < 34) {
+          draggingCanvasItem = 'obj';
+          canvas.setPointerCapture(e.pointerId);
+          cancelAnim();
+          return;
+        }
+
+        for (let i = 0; i < sandboxState.blockers.length; i++) {
+          const bw = gridXYToPx(sandboxState.blockers[i].x, sandboxState.blockers[i].y);
+          const bs = worldToScreen(bw.x, bw.y);
+          if (Math.hypot(sPt.x - bs.x, sPt.y - bs.y) < 34) {
+            draggingCanvasItem = i;
+            canvas.setPointerCapture(e.pointerId);
+            cancelAnim();
+            return;
+          }
+        }
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        const sPt = getCanvasScreenPt(e);
+
+        if (currentGame === 'sandbox' && draggingCanvasItem !== null) {
+          hoveredBallInfo = null;
+          const wPt = screenToWorld(sPt.x, sPt.y);
+          const gPt = pxToGridXY(wPt.x, wPt.y);
+
+          if (draggingCanvasItem === 'cue') sandboxState.cue = gPt;
+          else if (draggingCanvasItem === 'obj') sandboxState.obj = gPt;
+          else if (typeof draggingCanvasItem === 'number') {
+            sandboxState.blockers[draggingCanvasItem].x = gPt.x;
+            sandboxState.blockers[draggingCanvasItem].y = gPt.y;
+          }
+          updateHUD();
+          render();
+          return;
+        }
+
+        // Hover Magnifier Detection over any ball on the table!
+        const hit = findBallUnderScreenPt(sPt);
+        const prevKey = hoveredBallInfo ? hoveredBallInfo.key : null;
+        const nextKey = hit ? hit.key : null;
+        hoveredBallInfo = hit;
+        if (prevKey !== nextKey) render();
+      });
+
+      canvas.addEventListener('pointerleave', () => {
+        if (hoveredBallInfo) {
+          hoveredBallInfo = null;
+          render();
+        }
+      });
+
+      canvas.addEventListener('pointerup', () => {
+        if (draggingCanvasItem !== null) {
+          draggingCanvasItem = null;
+          if (povMode !== 'fixed') computeDesiredCameraAngle(false);
+        }
+      });
+      canvas.addEventListener('pointercancel', () => { draggingCanvasItem = null; });
+    }
+
+    const BALL_COLOR_NAMES = {
+      1: 'Yellow', 2: 'Blue', 3: 'Red', 4: 'Purple', 5: 'Orange', 6: 'Green', 7: 'Maroon', 8: 'Black',
+      9: 'Yellow Stripe', 10: 'Blue Stripe', 11: 'Red Stripe', 12: 'Purple Stripe',
+      13: 'Orange Stripe', 14: 'Green Stripe', 15: 'Maroon Stripe'
+    };
+
+    function findBallUnderScreenPt(sPt) {
+      const camScale = getCameraScale(cameraAngle);
+      const hitR = Math.max(28, getVisualBallRadius(camScale) + 8);
+
+      if (currentGame === 'sandbox') {
+        const cueW = gridXYToPx(sandboxState.cue.x, sandboxState.cue.y);
+        const cueS = worldToScreen(cueW.x, cueW.y);
+        if (Math.hypot(sPt.x - cueS.x, sPt.y - cueS.y) <= hitR) {
+          return { key: 'cue', num: 'CUE', title: `Cue Ball · ${formatGridCoord(sandboxState.cue.x, sandboxState.cue.y)}`, sx: cueS.x, sy: cueS.y, col: '#38bdf8' };
+        }
+        const objW = gridXYToPx(sandboxState.obj.x, sandboxState.obj.y);
+        const objS = worldToScreen(objW.x, objW.y);
+        if (Math.hypot(sPt.x - objS.x, sPt.y - objS.y) <= hitR) {
+          return { key: 'b1', num: '1', title: `#1 Yellow · ${formatGridCoord(sandboxState.obj.x, sandboxState.obj.y)}`, sx: objS.x, sy: objS.y, col: BALL_PALETTE[1] };
+        }
+        for (const b of sandboxState.blockers) {
+          const bw = gridXYToPx(b.x, b.y);
+          const bs = worldToScreen(bw.x, bw.y);
+          if (Math.hypot(sPt.x - bs.x, sPt.y - bs.y) <= hitR) {
+            return { key: `sb_${b.number}`, num: String(b.number), title: `#${b.number} Blocker · ${formatGridCoord(b.x, b.y)}`, sx: bs.x, sy: bs.y, col: BALL_PALETTE[b.number] || '#94a3b8' };
+          }
+        }
+        return null;
+      }
+
+      const rData = getRackData();
+      if (!rData) return null;
+      const strokes = getStrokes();
+      const pocketedBefore = new Set();
+      for (let i = 0; i < currentStrokeIdx - 1; i++) pocketedBefore.add(parseInt(strokes[i].ball));
+
+      // Check Cue Ball
+      const cueCoord = currentStrokeIdx <= 1 ? getActiveBIH() : strokes[currentStrokeIdx - 2].leave;
+      const cueW = gridToPx(cueCoord);
+      if (cueW) {
+        const cueS = worldToScreen(cueW.x, cueW.y);
+        if (Math.hypot(sPt.x - cueS.x, sPt.y - cueS.y) <= hitR) {
+          return { key: 'cue', num: 'CUE', title: `Cue Ball · ${cueCoord}`, sx: cueS.x, sy: cueS.y, col: '#38bdf8' };
+        }
+      }
+
+      for (const b of rData.balls) {
+        if (pocketedBefore.has(b.number)) continue;
+        const w = gridToPx(b.coord);
+        if (!w) continue;
+        const s = worldToScreen(w.x, w.y);
+        if (Math.hypot(sPt.x - s.x, sPt.y - s.y) <= hitR) {
+          return {
+            key: `b_${b.number}`,
+            num: String(b.number),
+            title: `#${b.number} ${BALL_COLOR_NAMES[b.number] || ''} · ${b.coord}`,
+            sx: s.x,
+            sy: s.y,
+            col: BALL_PALETTE[b.number] || '#ffffff'
+          };
+        }
+      }
+      return null;
+    }
+
+    function setSandboxPocket(pkKey) {
+      sandboxState.pocket = pkKey;
+      document.querySelectorAll('#sbPocketGrid .sb-pkt-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent === pkKey);
+      });
+      computeDesiredCameraAngle(false);
+      updateHUD();
+      render();
+    }
+
+    function addSandboxBlocker() {
+      const nextNum = ((sandboxState.blockers.length + 2) % 14) + 2;
+      sandboxState.blockers.push({
+        number: nextNum,
+        x: 24 + (sandboxState.blockers.length % 4) * 3,
+        y: 12 + (sandboxState.blockers.length % 3) * 3
+      });
+      render();
+    }
+
+    function clearSandboxBlockers() {
+      sandboxState.blockers = [];
+      updateHUD();
+      render();
+    }
+
+    function resetSandboxDefault() {
+      sandboxState = {
+        cue: { x: 18, y: 18 },
+        obj: { x: 34, y: 9 },
+        pocket: 'P3',
+        blockers: [{ number: 8, x: 31, y: 15 }]
+      };
+      explorerTip = { x: 0, y: 0 };
+      explorerPower = 3;
+      positionExplorerDot();
+      setSandboxPocket('P3');
+    }
+
+    function animateSandboxShot() {
+      sandboxSimCache = simulateWhatIfShot(
+        sandboxState.cue, sandboxState.obj, sandboxState.pocket,
+        explorerTip.x, explorerTip.y, explorerPower, sandboxState.blockers
+      );
+      if (!sandboxSimCache || sandboxSimCache.impossibleCut || sandboxSimCache.whiffedObjectBall) return;
+      runShotAnimationNow();
+    }
+
+    // ==================== CHOREOGRAPHED SHOT TRANSITIONS ====================
+    function switchGame(game, subset, btnEl) {
+      currentGame = game;
+      currentSubset = subset;
+      document.querySelectorAll('#gameTabs button').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+
+      const isSB = (game === 'sandbox');
+      document.getElementById('brandIcon').textContent = isSB ? '🧪' : (game === '10ball' ? '10' : (game === '8ball' ? '8' : '9'));
+      document.getElementById('rackNavBox').style.display = isSB ? 'none' : 'flex';
+      document.getElementById('puzzlePlaybackBar').style.display = isSB ? 'none' : 'flex';
+      document.getElementById('sandboxPlaybackBar').style.display = isSB ? 'flex' : 'none';
+      document.getElementById('scorecardPanel').style.display = isSB ? 'none' : 'flex';
+      document.getElementById('sandboxPocketPanel').style.display = isSB ? 'flex' : 'none';
+      canvas.style.cursor = isSB ? 'grab' : 'default';
+
+      stopAutoPlay();
+      cancelAnim();
+
+      if (isSB) {
+        explorerActive = true;
+        document.getElementById('cueCoachDot').style.display = 'none';
+        positionExplorerDot();
+        buildTimeline();
+        computeDesiredCameraAngle(false);
+        updateHUD();
+        render();
+      } else {
+        document.getElementById('cueCoachDot').style.display = 'block';
+        selectRack(currentRackNum, false);
+      }
+    }
+
+    function stepRack(delta) {
+      let next = currentRackNum + delta;
+      if (next < 1) next = 25;
+      if (next > 25) next = 1;
+      selectRack(next, false);
+    }
+
+    function selectRack(num, instantCam = false) {
+      currentRackNum = num;
+      document.getElementById('rackSelect').value = num;
+      currentStrokeIdx = 0;
+      stopAutoPlay();
+      cancelAnim();
+      snapExplorerToCoachStroke(null);
+      buildTimeline();
+      computeDesiredCameraAngle(instantCam);
+      updateHUD();
+      updateTryUI();
+      render();
+    }
+
+    function getRackData() {
+      const g = PUZZLE_DATA.games[currentGame];
+      return g ? g.racks[currentRackNum] : null;
+    }
+
+    function getActiveBIH() {
+      const r = getRackData();
+      if (!r) return 'A1';
+      if (currentGame === '8ball' && currentSubset === 'stripes') return r.bihStripes || r.bih;
+      return r.bih;
+    }
+
+    function getStrokes() {
+      const r = getRackData();
+      if (!r) return [];
+      if (currentGame === '8ball') return currentSubset === 'stripes' ? r.stripesStrokes : r.solidsStrokes;
+      return r.strokes;
+    }
+
+    function jumpToStroke(idx) {
+      cancelAnim();
+      currentStrokeIdx = idx;
+      const strokes = getStrokes();
+      const s = idx > 0 ? strokes[idx - 1] : null;
+      snapExplorerToCoachStroke(s);
+      buildTimeline();
+      const rotDuration = computeDesiredCameraAngle(false);
+      updateHUD();
+
+      if (idx === 0) {
+        render();
+        return;
+      }
+
+      // Hold balls at starting pre-shot position while table rotates + settles!
+      isAnimating = true;
+      animProgress = 0;
+      render();
+
+      if (rotDuration > 0) {
+        // Table is rotating! Rotate (680ms) + wait 1.4 seconds cleanly before shooting!
+        setPhaseChip(`↻ Rotating Table — Aiming Shot ${idx}...`);
+        const totalWait = rotDuration + 1400;
+        preShotDelayTimer = setTimeout(() => {
+          preShotDelayTimer = null;
+          setPhaseChip(null);
+          runShotAnimationNow();
+        }, totalWait);
+      } else {
+        // Same table side: brief 450ms pre-shot beat so player sees aim before cue fires
+        setPhaseChip(`🎯 Aiming Shot ${idx}...`);
+        preShotDelayTimer = setTimeout(() => {
+          preShotDelayTimer = null;
+          setPhaseChip(null);
+          runShotAnimationNow();
+        }, 450);
+      }
+    }
+
+    function nextStroke() {
+      const strokes = getStrokes();
+      if (currentStrokeIdx < strokes.length) jumpToStroke(currentStrokeIdx + 1);
+      else stopAutoPlay();
+    }
+
+    function prevStroke() {
+      if (currentStrokeIdx > 0) {
+        stopAutoPlay();
+        cancelAnim();
+        currentStrokeIdx--;
+        const strokes = getStrokes();
+        snapExplorerToCoachStroke(currentStrokeIdx > 0 ? strokes[currentStrokeIdx - 1] : null);
+        buildTimeline();
+        computeDesiredCameraAngle(false);
+        updateHUD();
+        render();
+      }
+    }
+
+    function resetRack() { stopAutoPlay(); jumpToStroke(0); }
+
+    function replayCurrentShot() {
+      if (currentStrokeIdx === 0) jumpToStroke(1);
+      else {
+        cancelAnim();
+        runShotAnimationNow();
+      }
+    }
+
+    function runShotAnimationNow() {
+      if (animFrame) cancelAnimationFrame(animFrame);
+      animProgress = 0;
+      isAnimating = true;
+      const startTime = performance.now();
+      const duration = 1250;
+
+      function tick(now) {
+        const t = Math.min(1, (now - startTime) / duration);
+        animProgress = t;
+        render();
+        if (t < 1) {
+          animFrame = requestAnimationFrame(tick);
+        } else {
+          isAnimating = false;
+          animFrame = null;
+          render();
+          // If Auto-Run is active, wait 1.0s after shot finishes before advancing to next shot!
+          if (isAutoRunning && currentGame !== 'sandbox') {
+            const strokes = getStrokes();
+            if (currentStrokeIdx < strokes.length) {
+              autoNextTimer = setTimeout(() => {
+                if (isAutoRunning) nextStroke();
+              }, 1050);
+            } else {
+              stopAutoPlay();
+            }
+          }
+        }
+      }
+      animFrame = requestAnimationFrame(tick);
+    }
+
+    function cancelAnim() {
+      if (preShotDelayTimer) { clearTimeout(preShotDelayTimer); preShotDelayTimer = null; }
+      if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
+      if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+      setPhaseChip(null);
+      isAnimating = false;
+      animProgress = 1.0;
+    }
+
+    function toggleAutoPlay() {
+      if (isAutoRunning) {
+        stopAutoPlay();
+      } else {
+        isAutoRunning = true;
+        document.getElementById('playBtn').textContent = '⏸ Pause';
+        if (currentStrokeIdx === getStrokes().length) currentStrokeIdx = 0;
+        nextStroke();
+      }
+    }
+
+    function stopAutoPlay() {
+      isAutoRunning = false;
+      if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
+      document.getElementById('playBtn').textContent = '▶ Auto-Run';
+    }
+
+    function toggleGridCoords() {
+      showGridCoords = !showGridCoords;
+      document.getElementById('gridToggleBtn').classList.toggle('active-toggle', showGridCoords);
+      render();
+    }
+
+    function buildTimeline() {
+      const container = document.getElementById('ballStepper');
+      container.innerHTML = '';
+
+      if (currentGame === 'sandbox') {
+        const pill = document.createElement('div');
+        pill.className = 'step-node active';
+        pill.textContent = '🧪 Drag Balls on Table & Drag Green Tip Dot to Test Squirt, Throw & Tangent Curves!';
+        container.appendChild(pill);
+        return;
+      }
+
+      const strokes = getStrokes();
+      const setupBtn = document.createElement('button');
+      setupBtn.className = 'step-node' + (currentStrokeIdx === 0 ? ' active' : '');
+      setupBtn.textContent = 'Setup';
+      setupBtn.onclick = () => { stopAutoPlay(); jumpToStroke(0); };
+      container.appendChild(setupBtn);
+
+      strokes.forEach((s, idx) => {
+        const stepNum = idx + 1;
+        const btn = document.createElement('button');
+        let cls = 'step-node';
+        if (currentStrokeIdx === stepNum) cls += ' active';
+        else if (currentStrokeIdx > stepNum) cls += ' completed';
+        btn.className = cls;
+
+        const dot = document.createElement('span');
+        dot.className = 'mini-ball-dot';
+        const col = BALL_PALETTE[s.ball] || '#fff';
+        dot.style.background = s.ball >= 9
+          ? `linear-gradient(180deg, #fff 22%, ${col} 22%, ${col} 78%, #fff 78%)`
+          : col;
+
+        const lbl = document.createElement('span');
+        lbl.textContent = `#${s.ball}`;
+        btn.appendChild(dot);
+        btn.appendChild(lbl);
+        btn.onclick = () => { stopAutoPlay(); jumpToStroke(stepNum); };
+        container.appendChild(btn);
+      });
+    }
+
+    // ==================== RENDER ARENA TABLE ====================
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const theme = CLOTH_THEMES[clothIdx];
+      const isSB = (currentGame === 'sandbox');
+      const strokes = isSB ? [] : getStrokes();
+      const activeStroke = (!isSB && currentStrokeIdx > 0) ? strokes[currentStrokeIdx - 1] : null;
+      const activePkt = isSB ? sandboxState.pocket : (activeStroke ? activeStroke.pocket : null);
+      const camScale = getCameraScale(cameraAngle);
+
+      let whatIfSim = null;
+      if (isSB) {
+        whatIfSim = simulateWhatIfShot(
+          sandboxState.cue, sandboxState.obj, sandboxState.pocket,
+          explorerTip.x, explorerTip.y, explorerPower, sandboxState.blockers
+        );
+      } else if (activeStroke) {
+        const startCueStr = currentStrokeIdx === 1 ? getActiveBIH() : strokes[currentStrokeIdx - 2].leave;
+        const cbG = parseGridCoord(startCueStr);
+        const obG = parseGridCoord(activeStroke.obj || activeStroke.coord);
+        const pocketedSet = new Set();
+        for (let i = 0; i < currentStrokeIdx; i++) pocketedSet.add(parseInt(strokes[i].ball));
+        const rData = getRackData();
+        const obsG = rData.balls
+          .filter(b => !pocketedSet.has(b.number))
+          .map(b => { const g = parseGridCoord(b.coord); return { number: b.number, x: g.x, y: g.y }; });
+        whatIfSim = simulateWhatIfShot(cbG, obG, activeStroke.pocket, explorerTip.x, explorerTip.y, explorerPower, obsG);
+      }
+
+      // --- PASS 1: ROTATED WORLD SPACE ---
+      ctx.save();
+      ctx.translate(CX, CY);
+      ctx.scale(camScale, camScale);
+      ctx.rotate(cameraAngle);
+      ctx.translate(-CX, -CY);
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+      ctx.shadowBlur = 42;
+      ctx.shadowOffsetY = 16;
+      ctx.fillStyle = '#13161f';
+      roundRect(ctx, T.frameX, T.frameY, T.frameW, T.frameH, 34, true, false);
+      ctx.restore();
+
+      const railGrad = ctx.createLinearGradient(T.frameX, T.frameY, T.frameX, T.frameY + T.frameH);
+      railGrad.addColorStop(0, '#2a1c17');
+      railGrad.addColorStop(0.5, '#1b120e');
+      railGrad.addColorStop(1, '#130c0a');
+      ctx.fillStyle = railGrad;
+      roundRect(ctx, T.frameX, T.frameY, T.frameW, T.frameH, 34, true, false);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.11)';
+      ctx.lineWidth = 2;
+      roundRect(ctx, T.frameX + 1, T.frameY + 1, T.frameW - 2, T.frameH - 2, 33, false, true);
+
+      drawPocketCastings();
+
+      ctx.fillStyle = theme.edge;
+      roundRect(ctx, T.feltX - 16, T.feltY - 16, T.feltW + 32, T.feltH + 32, 14, true, false);
+
+      const clothGrad = ctx.createRadialGradient(CX, CY, 60, CX, CY, T.feltW * 0.62);
+      clothGrad.addColorStop(0, theme.center);
+      clothGrad.addColorStop(0.65, theme.main);
+      clothGrad.addColorStop(1, theme.edge);
+      ctx.fillStyle = clothGrad;
+      ctx.fillRect(T.feltX, T.feltY, T.feltW, T.feltH);
+
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.38)';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(T.feltX + 4, T.feltY + 4, T.feltW - 8, T.feltH - 8);
+
+      drawTableMarkings();
+      drawDiamondInlays();
+      drawPocketHoles(activePkt);
+
+      if (isSB) {
+        drawSandboxTrajectoriesWorld(whatIfSim);
+      } else {
+        drawShotTrajectoriesWorld(strokes, activeStroke, whatIfSim);
+      }
+
+      ctx.restore();
+
+      // --- PASS 2: UPRIGHT SCREEN SPACE ---
+      if (showGridCoords) drawUprightCoords();
+      drawUprightPocketBadges(activePkt);
+
+      if (isSB) {
+        drawSandboxBallsScreen(camScale, whatIfSim);
+      } else {
+        drawAllBallsScreen(strokes, activeStroke, camScale);
+        drawUprightLeavePills(activeStroke, whatIfSim);
+      }
+
+      if (hoveredBallInfo && !isAnimating) {
+        drawHoveredBallMagnifier(hoveredBallInfo, camScale);
+      }
+    }
+
+    function drawHoveredBallMagnifier(info, camScale) {
+      const rVis = getVisualBallRadius(camScale);
+      ctx.save();
+      ctx.font = '800 16px Inter, -apple-system, sans-serif';
+      const textW = ctx.measureText(info.title).width;
+      const boxW = textW + 56;
+      const boxH = 40;
+      const cx = Math.max(boxW / 2 + 14, Math.min(canvas.width - boxW / 2 - 14, info.sx));
+      const preferTop = info.sy - rVis - 34;
+      const cy = preferTop > boxH / 2 + 14 ? preferTop : info.sy + rVis + 34;
+
+      // Highlight halo around hovered ball
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(info.sx, info.sy, rVis + 7, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Floating dark glass magnifier badge
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = 'rgba(9, 13, 24, 0.96)';
+      ctx.strokeStyle = info.col;
+      ctx.lineWidth = 2;
+      roundRect(ctx, cx - boxW / 2, cy - boxH / 2, boxW, boxH, 11, true, true);
+      ctx.shadowBlur = 0;
+
+      // Mini magnified ball number circle on left of tooltip
+      const badgeX = cx - boxW / 2 + 22;
+      ctx.fillStyle = info.col;
+      ctx.beginPath();
+      ctx.arc(badgeX, cy, 13, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = (info.num === '1' || info.num === '9') ? '#090d16' : '#ffffff';
+      ctx.font = `900 ${info.num === 'CUE' ? '9px' : '13px'} Inter, -apple-system, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(info.num, badgeX, cy + 0.5);
+
+      // Crisp 16px callout text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 16px Inter, -apple-system, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(info.title, cx - boxW / 2 + 42, cy + 0.5);
+      ctx.restore();
+    }
+
+    function drawPocketCastings() {
+      const corners = [
+        [T.frameX, T.frameY],
+        [T.frameX + T.frameW - 92, T.frameY],
+        [T.frameX, T.frameY + T.frameH - 92],
+        [T.frameX + T.frameW - 92, T.frameY + T.frameH - 92]
+      ];
+      ctx.save();
+      ctx.beginPath();
+      roundRectPath(ctx, T.frameX, T.frameY, T.frameW, T.frameH, 34);
+      ctx.clip();
+      const metalGrad = ctx.createLinearGradient(0, T.frameY, 0, T.frameY + T.frameH);
+      metalGrad.addColorStop(0, '#3b4252');
+      metalGrad.addColorStop(0.5, '#1f2430');
+      metalGrad.addColorStop(1, '#2e3440');
+      ctx.fillStyle = metalGrad;
+      corners.forEach(([cx, cy]) => ctx.fillRect(cx, cy, 92, 92));
+      ctx.fillRect(T.feltX + T.feltW / 2 - 48, T.frameY, 96, 62);
+      ctx.fillRect(T.feltX + T.feltW / 2 - 48, T.frameY + T.frameH - 62, 96, 62);
+      ctx.restore();
+    }
+
+    function drawTableMarkings() {
+      const headX = T.feltX + T.feltW * 0.25;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(headX, T.feltY + 8);
+      ctx.lineTo(headX, T.feltY + T.feltH - 8);
+      ctx.stroke();
+
+      const footX = T.feltX + T.feltW * 0.75;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.beginPath();
+      ctx.arc(footX, CY, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (showGridCoords) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+        ctx.lineWidth = 1;
+        for (let c = 1; c <= 50; c++) {
+          const p1 = gridXYToPx(c, 1), p2 = gridXYToPx(c, 26);
+          ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+        }
+        for (let r = 1; r <= 26; r++) {
+          const p1 = gridXYToPx(1, r), p2 = gridXYToPx(50, r);
+          ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+        }
+      }
+    }
+
+    function drawDiamondInlays() {
+      const drawPearl = (x, y) => {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = '#e2e8f0'; ctx.fillRect(-4.5, -4.5, 9, 9); ctx.restore();
+      };
+      const yTop = T.frameY + 36, yBot = T.frameY + T.frameH - 36;
+      for (let i = 1; i <= 3; i++) {
+        drawPearl(T.feltX + (T.feltW / 8) * i, yTop);
+        drawPearl(T.feltX + T.feltW / 2 + (T.feltW / 8) * i, yTop);
+        drawPearl(T.feltX + (T.feltW / 8) * i, yBot);
+        drawPearl(T.feltX + T.feltW / 2 + (T.feltW / 8) * i, yBot);
+      }
+      const xLeft = T.frameX + 36, xRight = T.frameX + T.frameW - 36;
+      for (let i = 1; i <= 3; i++) {
+        drawPearl(xLeft, T.feltY + (T.feltH / 4) * i);
+        drawPearl(xRight, T.feltY + (T.feltH / 4) * i);
+      }
+    }
+
+    function drawPocketHoles(activePocketKey) {
+      for (const [key, p] of Object.entries(POCKETS)) {
+        const isSide = (p.type === 'Side');
+        const isTarget = (key === activePocketKey);
+        const holeR = isSide ? 27 : 31;
+
+        ctx.fillStyle = '#090d16';
+        ctx.beginPath(); ctx.arc(p.x, p.y, holeR + 5, 0, Math.PI * 2); ctx.fill();
+
+        const pGrad = ctx.createRadialGradient(p.x, p.y, 4, p.x, p.y, holeR);
+        pGrad.addColorStop(0, '#000000');
+        pGrad.addColorStop(1, '#0b1120');
+        ctx.fillStyle = pGrad;
+        ctx.beginPath(); ctx.arc(p.x, p.y, holeR, 0, Math.PI * 2); ctx.fill();
+
+        if (isTarget) {
+          ctx.save();
+          ctx.strokeStyle = '#facc15';
+          ctx.shadowColor = '#facc15';
+          ctx.shadowBlur = 18;
+          ctx.lineWidth = 3.5;
+          ctx.beginPath(); ctx.arc(p.x, p.y, holeR + 4, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+
+    function drawUprightPocketBadges(activePocketKey) {
+      for (const [key, p] of Object.entries(POCKETS)) {
+        const sp = worldToScreen(p.badgeX, p.badgeY);
+        const isTarget = (key === activePocketKey);
+        const bw = 56 * Math.max(0.85, sp.scale);
+        const bh = 30 * Math.max(0.85, sp.scale);
+        const bx = sp.x - bw / 2, by = sp.y - bh / 2;
+
+        ctx.save();
+        if (isTarget) {
+          ctx.fillStyle = '#facc15';
+          ctx.shadowColor = 'rgba(250, 204, 21, 0.8)';
+          ctx.shadowBlur = 18;
+          roundRect(ctx, bx, by, bw, bh, 9, true, false);
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#090d16';
+        } else {
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+          ctx.lineWidth = 1.6;
+          roundRect(ctx, bx, by, bw, bh, 9, true, true);
+          ctx.fillStyle = '#f8fafc';
+        }
+
+        ctx.font = `800 ${Math.round(17.5 * Math.max(0.85, sp.scale))}px Inter, -apple-system, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(key, sp.x, sp.y + 0.5);
+        ctx.restore();
+      }
+    }
+
+    function drawUprightCoords() {
+      ctx.save();
+      ctx.fillStyle = 'rgba(226, 232, 240, 0.82)';
+      ctx.font = '700 12px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let c = 5; c <= 45; c += 5) {
+        if (c === 25) continue;
+        const pTop = gridXYToPx(c, 1);
+        const sp = worldToScreen(pTop.x, T.feltY - 22);
+        ctx.fillText(String(c), sp.x, sp.y);
+      }
+      for (let r = 1; r <= 26; r += 2) {
+        const pLeft = gridXYToPx(1, r);
+        const sp = worldToScreen(T.feltX - 24, pLeft.y);
+        ctx.fillText(String.fromCharCode(64 + r), sp.x, sp.y);
+      }
+      ctx.restore();
+    }
+
+    // Draw Target Ball Actual Path (Red Miss Arrow + Rail Bounce OR Green Make Arrow) & Cue Ball Spin Curve
+    function drawExplorerOverlayWorld(whatIfSim, showExplorerPaths) {
+      if (!whatIfSim || whatIfSim.impossibleCut) return;
+
+      if (whatIfSim.whiffedObjectBall && showExplorerPaths) {
+        const wp = whatIfSim.whiffPath.map(p => gridXYToPx(p.x, p.y));
+        ctx.save();
+        ctx.strokeStyle = '#ef4444';
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 3.5;
+        ctx.setLineDash([6, 5]);
+        ctx.beginPath(); ctx.moveTo(wp[0].x, wp[0].y); ctx.lineTo(wp[1].x, wp[1].y); ctx.stroke();
+        ctx.restore();
+        return;
+      }
+
+      const gPx = gridXYToPx(whatIfSim.ghost.x, whatIfSim.ghost.y);
+      const tPx = gridXYToPx(whatIfSim.tangentEnd.x, whatIfSim.tangentEnd.y);
+
+      // 1. 90° Tangent Reference Line (Silver)
+      ctx.save();
+      ctx.strokeStyle = 'rgba(226, 232, 240, 0.42)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath(); ctx.moveTo(gPx.x, gPx.y); ctx.lineTo(tPx.x, tPx.y); ctx.stroke();
+      ctx.restore();
+
+      if (!showExplorerPaths) return;
+
+      // 2. TARGET OBJECT BALL OUTCOME ARROW (Red Miss + Rail Bounce vs. Green Pocket Entry!)
+      if (whatIfSim.obResult && whatIfSim.obResult.path && whatIfSim.obResult.path.length >= 2) {
+        const obPts = whatIfSim.obResult.path.map(p => gridXYToPx(p.x, p.y));
+        const made = whatIfSim.obResult.madeTarget;
+
+        if (!made) {
+          // BOLD GLOWING RED ARROW SHOWING TARGET BALL MISSING & HITTING RAIL!
+          ctx.save();
+          ctx.strokeStyle = '#ef4444';
+          ctx.shadowColor = 'rgba(239, 68, 68, 0.85)';
+          ctx.shadowBlur = 14;
+          ctx.lineWidth = 4.2;
+          ctx.beginPath();
+          ctx.moveTo(obPts[0].x, obPts[0].y);
+          for (let i = 1; i < obPts.length; i++) ctx.lineTo(obPts[i].x, obPts[i].y);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          const last = obPts[obPts.length - 1];
+          const prev = obPts[obPts.length - 2];
+          drawArrowHead(last.x, last.y, Math.atan2(last.y - prev.y, last.x - prev.x), '#ef4444', 16);
+
+          // Red 'X' impact marker right where Target Ball slams into the rail!
+          if (whatIfSim.obResult.railHitPt) {
+            const rp = gridXYToPx(whatIfSim.obResult.railHitPt.x, whatIfSim.obResult.railHitPt.y);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(rp.x - 8, rp.y - 8); ctx.lineTo(rp.x + 8, rp.y + 8);
+            ctx.moveTo(rp.x + 8, rp.y - 8); ctx.lineTo(rp.x - 8, rp.y + 8);
+            ctx.stroke();
+          }
+          ctx.restore();
+        } else if (Math.abs(whatIfSim.squirtDeg) > 0.25) {
+          // Side spin shifted the line slightly, but it STILL cheats the pocket and drops!
+          ctx.save();
+          ctx.strokeStyle = '#34d399';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([6, 4]);
+          ctx.beginPath();
+          ctx.moveTo(obPts[0].x, obPts[0].y);
+          ctx.lineTo(obPts[1].x, obPts[1].y);
+          ctx.stroke();
+          drawArrowHead(obPts[1].x, obPts[1].y, Math.atan2(obPts[1].y - obPts[0].y, obPts[1].x - obPts[0].x), '#34d399', 14);
+          ctx.restore();
+        }
+      }
+
+      // 3. Simulated Cue Ball Spin Curve & Cushion Rebounds
+      if (whatIfSim.path && whatIfSim.path.length >= 2) {
+        const isCueFoul = (whatIfSim.hitBall !== null || whatIfSim.scratchedPocket !== null);
+        const lineCol = isCueFoul ? '#fb7185' : '#10b981';
+
+        const pts = whatIfSim.path.map(p => gridXYToPx(p.x, p.y));
+        ctx.save();
+        ctx.strokeStyle = lineCol;
+        ctx.shadowColor = lineCol;
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+        ctx.restore();
+
+        const endPx = pts[pts.length - 1];
+        ctx.save();
+        ctx.fillStyle = isCueFoul ? 'rgba(244, 63, 94, 0.28)' : 'rgba(16, 185, 129, 0.28)';
+        ctx.strokeStyle = lineCol;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(endPx.x, endPx.y, T.ballR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function drawShotTrajectoriesWorld(strokes, stroke, whatIfSim) {
+      if (!stroke || currentStrokeIdx === 0) return;
+
+      const startCueCoord = currentStrokeIdx === 1 ? getActiveBIH() : strokes[currentStrokeIdx - 2].leave;
+      const cuePos = gridToPx(startCueCoord);
+      const objPos = gridToPx(stroke.obj || stroke.coord);
+      const pktPos = POCKETS[stroke.pocket];
+      const leavePos = gridToPx(stroke.leave);
+      const ghostPos = stroke.ghost ? gridXYToPx(stroke.ghost[0], stroke.ghost[1]) : objPos;
+      if (!cuePos || !objPos || !pktPos) return;
+
+      // 1. Official Object Ball -> Pocket Line (Dimmed slightly if explorer shows a red miss so red arrow pops!)
+      const missedTarget = explorerActive && whatIfSim && whatIfSim.obResult && !whatIfSim.obResult.madeTarget;
+      ctx.save();
+      ctx.strokeStyle = missedTarget ? 'rgba(250, 204, 21, 0.35)' : '#facc15';
+      ctx.lineWidth = 3.5;
+      if (missedTarget) ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(objPos.x, objPos.y);
+      ctx.lineTo(pktPos.x, pktPos.y);
+      ctx.stroke();
+      drawArrowHead(pktPos.x, pktPos.y, Math.atan2(pktPos.y - objPos.y, pktPos.x - objPos.x), missedTarget ? 'rgba(250,204,21,0.45)' : '#facc15', 15);
+      ctx.restore();
+
+      // 2. Ghost Ball Ring
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.82)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.arc(ghostPos.x, ghostPos.y, T.ballR, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+
+      // 3. Cue Ball -> Ghost Ball Line
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.92)';
+      ctx.lineWidth = 2.8;
+      ctx.setLineDash([8, 7]);
+      ctx.beginPath(); ctx.moveTo(cuePos.x, cuePos.y); ctx.lineTo(ghostPos.x, ghostPos.y); ctx.stroke();
+      ctx.restore();
+
+      // 4. Official Coach Cue Path & Target Leave Zone
+      if (leavePos && stroke.leave !== 'Rack over') {
+        const pathPts = (stroke.path && stroke.path.length >= 2)
+          ? stroke.path.map(pt => gridXYToPx(pt[0], pt[1]))
+          : [ghostPos, leavePos];
+
+        ctx.save();
+        ctx.strokeStyle = explorerActive ? 'rgba(56, 189, 248, 0.42)' : '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([7, 6]);
+        ctx.beginPath();
+        ctx.moveTo(pathPts[0].x, pathPts[0].y);
+        for (let i = 1; i < pathPts.length; i++) ctx.lineTo(pathPts[i].x, pathPts[i].y);
+        ctx.stroke();
+        ctx.restore();
+
+        const zoneGrad = ctx.createRadialGradient(leavePos.x, leavePos.y, 4, leavePos.x, leavePos.y, 46);
+        zoneGrad.addColorStop(0, 'rgba(56, 189, 248, 0.48)');
+        zoneGrad.addColorStop(0.55, 'rgba(56, 189, 248, 0.16)');
+        zoneGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        ctx.fillStyle = zoneGrad;
+        ctx.beginPath(); ctx.arc(leavePos.x, leavePos.y, 46, 0, Math.PI * 2); ctx.fill();
+
+        ctx.save();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.2;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath(); ctx.arc(leavePos.x, leavePos.y, 25, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+
+        if (currentStrokeIdx < strokes.length) {
+          const nextBallPos = gridToPx(strokes[currentStrokeIdx].obj || strokes[currentStrokeIdx].coord);
+          if (nextBallPos) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 6]);
+            ctx.beginPath(); ctx.moveTo(leavePos.x, leavePos.y); ctx.lineTo(nextBallPos.x, nextBallPos.y); ctx.stroke();
+            ctx.restore();
+          }
+        }
+      }
+
+      // 5. Explorer Tangent Line, Red Missed Object-Ball Arrow & Green Spin Curve on top!
+      drawExplorerOverlayWorld(whatIfSim, explorerActive);
+    }
+
+    function drawSandboxTrajectoriesWorld(whatIfSim) {
+      const cuePos = gridXYToPx(sandboxState.cue.x, sandboxState.cue.y);
+      const objPos = gridXYToPx(sandboxState.obj.x, sandboxState.obj.y);
+      const pktPos = POCKETS[sandboxState.pocket];
+
+      const missed = whatIfSim && whatIfSim.obResult && !whatIfSim.obResult.madeTarget;
+      ctx.save();
+      ctx.strokeStyle = missed ? 'rgba(250, 204, 21, 0.35)' : '#facc15';
+      if (missed) ctx.setLineDash([6, 6]);
+      ctx.lineWidth = 3.5;
+      ctx.beginPath(); ctx.moveTo(objPos.x, objPos.y); ctx.lineTo(pktPos.x, pktPos.y); ctx.stroke();
+      drawArrowHead(pktPos.x, pktPos.y, Math.atan2(pktPos.y - objPos.y, pktPos.x - objPos.x), '#facc15', 15);
+      ctx.restore();
+
+      if (!whatIfSim) return;
+      const ghostPos = gridXYToPx(whatIfSim.idealGhost ? whatIfSim.idealGhost.x : whatIfSim.ghost.x, whatIfSim.idealGhost ? whatIfSim.idealGhost.y : whatIfSim.ghost.y);
+
+      ctx.save();
+      ctx.strokeStyle = whatIfSim.impossibleCut ? '#f43f5e' : 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 2.8;
+      ctx.setLineDash([8, 7]);
+      ctx.beginPath(); ctx.moveTo(cuePos.x, cuePos.y); ctx.lineTo(ghostPos.x, ghostPos.y); ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.arc(ghostPos.x, ghostPos.y, T.ballR, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+
+      drawExplorerOverlayWorld(whatIfSim, true);
+    }
+
+    function drawUprightLeavePills(stroke, whatIfSim) {
+      if (!stroke || currentStrokeIdx === 0) return;
+
+      if (stroke.leave !== 'Rack over') {
+        const leaveWorld = gridToPx(stroke.leave);
+        if (leaveWorld) {
+          const sp = worldToScreen(leaveWorld.x, leaveWorld.y);
+          drawScreenPill(sp.x, sp.y - 36 * sp.scale, `COACH: ${stroke.leave}`, '#0ea5e9');
+        }
+      }
+
+      if (explorerActive && whatIfSim && !whatIfSim.impossibleCut) {
+        if (whatIfSim.whiffedObjectBall) {
+          const obW = gridToPx(stroke.obj || stroke.coord);
+          const sp = worldToScreen(obW.x, obW.y);
+          drawScreenPill(sp.x, sp.y - 38 * sp.scale, `✗ CUE BALL WHIFFS!`, '#ef4444');
+          return;
+        }
+
+        // Red Pill on Rail Miss if Object Ball misses the pocket!
+        if (whatIfSim.obResult && !whatIfSim.obResult.madeTarget && whatIfSim.obResult.railHitPt) {
+          const rpW = gridXYToPx(whatIfSim.obResult.railHitPt.x, whatIfSim.obResult.railHitPt.y);
+          const spR = worldToScreen(rpW.x, rpW.y);
+          const offsetY = spR.y < CY ? 28 : -28;
+          drawScreenPill(spR.x, spR.y + offsetY, `✗ ${whatIfSim.obResult.reason.toUpperCase()}`, '#ef4444');
+        }
+
+        if (whatIfSim.path && whatIfSim.path.length >= 2) {
+          const endG = whatIfSim.path[whatIfSim.path.length - 1];
+          const endW = gridXYToPx(endG.x, endG.y);
+          const sp = worldToScreen(endW.x, endW.y);
+          let lbl = `SPIN: ${whatIfSim.endCoord}`;
+          let col = '#10b981';
+          if (whatIfSim.scratchedPocket) { lbl = `⚠️ SCRATCH ${whatIfSim.scratchedPocket}`; col = '#f43f5e'; }
+          else if (whatIfSim.hitBall !== null) { lbl = `⚠️ HITS #${whatIfSim.hitBall}`; col = '#f43f5e'; }
+          drawScreenPill(sp.x, sp.y + 34 * sp.scale, lbl, col);
+        }
+      }
+    }
+
+    function drawScreenPill(sx, sy, text, borderCol) {
+      ctx.save();
+      ctx.font = '800 12.5px Inter, -apple-system, sans-serif';
+      const w = ctx.measureText(text).width + 18;
+      const h = 23;
+      const clampedX = Math.max(w / 2 + 12, Math.min(canvas.width - w / 2 - 12, sx));
+      const clampedY = Math.max(h / 2 + 12, Math.min(canvas.height - h / 2 - 12, sy));
+      ctx.fillStyle = 'rgba(9, 13, 22, 0.94)';
+      ctx.strokeStyle = borderCol;
+      ctx.lineWidth = 1.8;
+      roundRect(ctx, clampedX - w / 2, clampedY - h / 2, w, h, 8, true, true);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, clampedX, clampedY + 0.5);
+      ctx.restore();
+    }
+
+    function drawSandboxBallsScreen(camScale, whatIfSim) {
+      const rScaled = getVisualBallRadius(camScale);
+
+      sandboxState.blockers.forEach(b => {
+        const w = gridXYToPx(b.x, b.y);
+        const s = worldToScreen(w.x, w.y);
+        drawAramithBall(s.x, s.y, rScaled, b.number, b.number >= 9, false, false);
+      });
+
+      const objW = gridXYToPx(sandboxState.obj.x, sandboxState.obj.y);
+      const cueW = gridXYToPx(sandboxState.cue.x, sandboxState.cue.y);
+
+      if (isAnimating && sandboxSimCache && !sandboxSimCache.impossibleCut && !sandboxSimCache.whiffedObjectBall) {
+        if (animProgress <= 0.34) {
+          const sObj = worldToScreen(objW.x, objW.y);
+          drawAramithBall(sObj.x, sObj.y, rScaled, 1, false, true, false);
+          const ghostW = gridXYToPx(sandboxSimCache.ghost.x, sandboxSimCache.ghost.y);
+          const t1 = animProgress / 0.34;
+          const sCue = worldToScreen(cueW.x + (ghostW.x - cueW.x) * t1, cueW.y + (ghostW.y - cueW.y) * t1);
+          drawAramithCueBall(sCue.x, sCue.y, rScaled, false);
+        } else {
+          const obPathW = sandboxSimCache.obResult.path.map(p => gridXYToPx(p.x, p.y));
+          const obT = Math.min(1, (animProgress - 0.34) / 0.58);
+          if (!sandboxSimCache.obResult.madeTarget || obT < 0.96) {
+            const wOb = interpolatePolyline(obPathW, 1 - Math.pow(1 - obT, 2));
+            const sObj = worldToScreen(wOb.x, wOb.y);
+            drawAramithBall(sObj.x, sObj.y, rScaled, 1, false, true, false);
+          }
+          const ptsW = sandboxSimCache.path.map(p => gridXYToPx(p.x, p.y));
+          const t2 = 1 - Math.pow(1 - (animProgress - 0.34) / 0.66, 2.2);
+          const wPoly = interpolatePolyline(ptsW, t2);
+          const sCue = worldToScreen(wPoly.x, wPoly.y);
+          drawAramithCueBall(sCue.x, sCue.y, rScaled, false);
+        }
+        return;
+      }
+
+      const sObj = worldToScreen(objW.x, objW.y);
+      drawAramithBall(sObj.x, sObj.y, rScaled, 1, false, true, false);
+
+      const sCue = worldToScreen(cueW.x, cueW.y);
+      drawAramithCueBall(sCue.x, sCue.y, rScaled, true);
+
+      if (whatIfSim && !whatIfSim.impossibleCut && !whatIfSim.whiffedObjectBall) {
+        if (whatIfSim.obResult && !whatIfSim.obResult.madeTarget && whatIfSim.obResult.railHitPt) {
+          const rpW = gridXYToPx(whatIfSim.obResult.railHitPt.x, whatIfSim.obResult.railHitPt.y);
+          const spR = worldToScreen(rpW.x, rpW.y);
+          drawScreenPill(spR.x, spR.y + (spR.y < CY ? 28 : -28), `✗ ${whatIfSim.obResult.reason.toUpperCase()}`, '#ef4444');
+        }
+        if (whatIfSim.path && whatIfSim.path.length >= 2) {
+          const endG = whatIfSim.path[whatIfSim.path.length - 1];
+          const endW = gridXYToPx(endG.x, endG.y);
+          const sp = worldToScreen(endW.x, endW.y);
+          let lbl = `STOP: ${whatIfSim.endCoord}`;
+          let col = '#10b981';
+          if (whatIfSim.scratchedPocket) { lbl = `⚠️ SCRATCH ${whatIfSim.scratchedPocket}`; col = '#f43f5e'; }
+          else if (whatIfSim.hitBall !== null) { lbl = `⚠️ HITS #${whatIfSim.hitBall}`; col = '#f43f5e'; }
+          drawScreenPill(sp.x, sp.y - 34 * sp.scale, lbl, col);
+        }
+      }
+    }
+
+    function drawAllBallsScreen(strokes, activeStroke, camScale) {
+      const rData = getRackData();
+      if (!rData) return;
+
+      const pocketedBefore = new Set();
+      for (let i = 0; i < currentStrokeIdx - 1; i++) pocketedBefore.add(parseInt(strokes[i].ball));
+
+      const activeBallNum = activeStroke ? parseInt(activeStroke.ball) : null;
+      const nextBallNum = (currentStrokeIdx > 0 && currentStrokeIdx < strokes.length)
+        ? parseInt(strokes[currentStrokeIdx].ball)
+        : (currentStrokeIdx === 0 && strokes.length > 0 ? parseInt(strokes[0].ball) : null);
+
+      const rScaled = getVisualBallRadius(camScale);
+
+      rData.balls.forEach(b => {
+        if (pocketedBefore.has(b.number)) return;
+        if (b.number === activeBallNum && isAnimating && animProgress > 0.36) {
+          const startPos = gridToPx(b.coord);
+          const pktPos = POCKETS[activeStroke.pocket];
+          const obT = Math.min(1, (animProgress - 0.36) / 0.52);
+          if (obT < 0.98) {
+            const ease = 1 - Math.pow(1 - obT, 2);
+            const sp = worldToScreen(startPos.x + (pktPos.x - startPos.x) * ease, startPos.y + (pktPos.y - startPos.y) * ease);
+            drawAramithBall(sp.x, sp.y, rScaled, b.number, b.isStripe, true, false);
+          }
+          return;
+        }
+        const wpos = gridToPx(b.coord);
+        if (wpos) {
+          const sp = worldToScreen(wpos.x, wpos.y);
+          drawAramithBall(sp.x, sp.y, rScaled, b.number, b.isStripe, b.number === activeBallNum, b.number === nextBallNum);
+        }
+      });
+
+      const startCueCoord = currentStrokeIdx <= 1 ? getActiveBIH() : strokes[currentStrokeIdx - 2].leave;
+      const startCueWorld = gridToPx(startCueCoord);
+
+      if (currentStrokeIdx === 0 || !activeStroke) {
+        if (startCueWorld) {
+          const sp = worldToScreen(startCueWorld.x, startCueWorld.y);
+          drawAramithCueBall(sp.x, sp.y, rScaled, true);
+        }
+        return;
+      }
+
+      if (isAnimating && startCueWorld) {
+        const ghostWorld = activeStroke.ghost ? gridXYToPx(activeStroke.ghost[0], activeStroke.ghost[1]) : gridToPx(activeStroke.obj || activeStroke.coord);
+        if (animProgress <= 0.36) {
+          const t1 = animProgress / 0.36;
+          const sp = worldToScreen(
+            startCueWorld.x + (ghostWorld.x - startCueWorld.x) * t1,
+            startCueWorld.y + (ghostWorld.y - startCueWorld.y) * t1
+          );
+          drawAramithCueBall(sp.x, sp.y, rScaled, false);
+        } else if (activeStroke.leave !== 'Rack over') {
+          const leaveWorld = gridToPx(activeStroke.leave);
+          const pts = (activeStroke.path && activeStroke.path.length >= 2)
+            ? activeStroke.path.map(p => gridXYToPx(p[0], p[1]))
+            : [ghostWorld, leaveWorld];
+          const t2 = 1 - Math.pow(1 - (animProgress - 0.36) / 0.64, 2.2);
+          const wPoly = interpolatePolyline(pts, t2);
+          const sp = worldToScreen(wPoly.x, wPoly.y);
+          drawAramithCueBall(sp.x, sp.y, rScaled, false);
+        } else {
+          const sp = worldToScreen(ghostWorld.x, ghostWorld.y);
+          drawAramithCueBall(sp.x, sp.y, rScaled, false);
+        }
+      } else if (startCueWorld) {
+        const sp = worldToScreen(startCueWorld.x, startCueWorld.y);
+        drawAramithCueBall(sp.x, sp.y, rScaled, currentStrokeIdx === 1);
+      }
+    }
+
+    function interpolatePolyline(pts, t) {
+      if (pts.length === 1) return pts[0];
+      let totalLen = 0;
+      const segLens = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const d = Math.hypot(pts[i+1].x - pts[i].x, pts[i+1].y - pts[i].y);
+        segLens.push(d);
+        totalLen += d;
+      }
+      if (totalLen < 0.01) return pts[pts.length - 1];
+      let target = totalLen * Math.max(0, Math.min(1, t));
+      for (let i = 0; i < segLens.length; i++) {
+        if (target <= segLens[i] || i === segLens.length - 1) {
+          const frac = segLens[i] > 0 ? target / segLens[i] : 0;
+          return { x: pts[i].x + (pts[i+1].x - pts[i].x) * frac, y: pts[i].y + (pts[i+1].y - pts[i].y) * frac };
+        }
+        target -= segLens[i];
+      }
+      return pts[pts.length - 1];
+    }
+
+    function drawAramithBall(x, y, r, num, isStripe, isActive, isNextPreview) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
+      ctx.beginPath(); ctx.ellipse(x + 3, y + 4.5, r * 1.02, r * 0.78, 0, 0, Math.PI * 2); ctx.fill();
+
+      if (isActive) {
+        ctx.save();
+        ctx.strokeStyle = '#facc15'; ctx.shadowColor = '#facc15'; ctx.shadowBlur = 16; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(x, y, r + 6, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      } else if (isNextPreview) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.arc(x, y, r + 5, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.save();
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+
+      const col = BALL_PALETTE[num] || '#cbd5e1';
+      if (isStripe) {
+        ctx.fillStyle = '#fdfaf2'; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+        ctx.fillStyle = col; ctx.fillRect(x - r, y - r * 0.56, r * 2, r * 1.12);
+      } else {
+        ctx.fillStyle = col; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      }
+
+      const medRatio = ballSizeIdx > 0 ? 0.57 : 0.52;
+      ctx.fillStyle = '#fdfaf2';
+      ctx.beginPath(); ctx.arc(x, y, r * medRatio, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)'; ctx.lineWidth = 1; ctx.stroke();
+
+      ctx.fillStyle = '#090d16';
+      const fontBoost = ballSizeIdx > 0 ? 1.08 : 1.0;
+      const fontPx = Math.max(9.5, (num >= 10 ? 11.5 : 13) * (r / 17.5) * fontBoost);
+      ctx.font = `900 ${fontPx}px Inter, -apple-system, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(num), x, y + 0.5);
+
+      const shade = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
+      shade.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
+      shade.addColorStop(0.28, 'rgba(255, 255, 255, 0.08)');
+      shade.addColorStop(0.75, 'rgba(0, 0, 0, 0.08)');
+      shade.addColorStop(1, 'rgba(0, 0, 0, 0.42)');
+      ctx.fillStyle = shade; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
+      ctx.beginPath(); ctx.ellipse(x - r * 0.34, y - r * 0.38, r * 0.22, r * 0.13, -Math.PI / 5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawAramithCueBall(x, y, r, showBIHRing) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
+      ctx.beginPath(); ctx.ellipse(x + 3, y + 4.5, r * 1.02, r * 0.78, 0, 0, Math.PI * 2); ctx.fill();
+
+      if (showBIHRing) {
+        ctx.save();
+        ctx.strokeStyle = '#38bdf8'; ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 12; ctx.lineWidth = 2.5; ctx.setLineDash([5, 4]);
+        ctx.beginPath(); ctx.arc(x, y, r + 7, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+
+      const grad = ctx.createRadialGradient(x - r * 0.32, y - r * 0.32, 2, x, y, r);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.68, '#f1f5f9');
+      grad.addColorStop(1, '#94a3b8');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#e11d48';
+      const sc = r / 17.5;
+      [[-5, 3], [5, -3], [1, 6]].forEach(([dx, dy]) => {
+        ctx.beginPath(); ctx.arc(x + dx * sc, y + dy * sc, 2.3 * sc, 0, Math.PI * 2); ctx.fill();
+      });
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.beginPath(); ctx.ellipse(x - r * 0.34, y - r * 0.38, r * 0.22, r * 0.13, -Math.PI / 5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawArrowHead(x, y, angle, color, size) {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(-size, -size * 0.55); ctx.lineTo(0, 0); ctx.lineTo(-size, size * 0.55); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    function roundRectPath(ctx, x, y, w, h, r) {
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+      ctx.beginPath(); roundRectPath(ctx, x, y, w, h, r);
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    // ==================== HUD TELEMETRY ====================
+    function describeExplorerSpin(tx, ty) {
+      const parts = [];
+      if (ty < -0.55) parts.push('High Follow');
+      else if (ty < -0.18) parts.push('Soft Follow');
+      else if (ty > 0.55) parts.push('Low Draw');
+      else if (ty > 0.18) parts.push('Stun-Draw');
+      else parts.push('Center Stun');
+
+      if (tx < -0.5) parts.push('+ Full Left');
+      else if (tx < -0.14) parts.push('+ Touch Left');
+      else if (tx > 0.5) parts.push('+ Full Right');
+      else if (tx > 0.14) parts.push('+ Touch Right');
+
+      return parts.join(' ');
+    }
+
+    function formatOutcomeMessage(sim, bLabel, targetPkt) {
+      if (!sim || sim.impossibleCut) {
+        return { warn: true, text: `⚠️ Cut exceeds 78° — move Cue Ball or pick another pocket!` };
+      }
+      if (sim.whiffedObjectBall) {
+        return { warn: true, text: `❌ Cue-ball squirt (${Math.abs(sim.squirtDeg).toFixed(1)}°) whiffs the ${bLabel} completely!` };
+      }
+      const obOk = sim.obResult && sim.obResult.madeTarget;
+      if (!obOk) {
+        const why = Math.abs(sim.squirtDeg) > 0.2
+          ? `Squirt (${Math.abs(sim.squirtDeg).toFixed(1)}°) + Throw shifts contact`
+          : `Off pocket line`;
+        return {
+          warn: true,
+          text: `❌ ${bLabel} ${sim.obResult.reason}! (${why} — see Red Arrow)`
+        };
+      }
+      if (sim.scratchedPocket) {
+        return { warn: true, text: `✓ ${bLabel} drops in ${targetPkt}, BUT ⚠️ Cue Ball scratches in ${sim.scratchedPocket}!` };
+      }
+      if (sim.hitBall !== null) {
+        return { warn: true, text: `✓ ${bLabel} drops in ${targetPkt}, BUT ⚠️ Cue Ball runs into #${sim.hitBall}-Ball!` };
+      }
+      const cheatNote = Math.abs(sim.squirtDeg) > 0.35 ? ' (cheats jaw)' : '';
+      return {
+        warn: false,
+        text: `✓ ${bLabel} pockets in ${targetPkt}${cheatNote} · Cue stops at ${sim.endCoord} (${sim.bounces} rail${sim.bounces === 1 ? '' : 's'})`
+      };
+    }
+
+    function updateHUD() {
+      const kickerEl = document.getElementById('shotKicker');
+      const titleEl = document.getElementById('shotTitle');
+      const calloutEl = document.getElementById('targetCallout');
+      const heroBadge = document.getElementById('heroBallBadge');
+      const notesEl = document.getElementById('coachNotes');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+
+      const pocketEl = document.getElementById('pocketVal');
+      const angleEl = document.getElementById('angleVal');
+      const railsEl = document.getElementById('railsVal');
+      const tipModeLabel = document.getElementById('tipModeLabel');
+      const cueEl = document.getElementById('cueVal');
+      const coachDot = document.getElementById('cueCoachDot');
+      const powerEl = document.getElementById('powerVal');
+      const resetExpBtn = document.getElementById('resetExplorerBtn');
+      const aimCompBtn = document.getElementById('aimCompBtn');
+      const expReadout = document.getElementById('explorerReadout');
+
+      const pwrLabels = { 1: 'Touch', 2: 'Soft Control', 3: 'Medium Roll', 4: 'Firm 2-Rail', 5: 'Full Speed' };
+
+      if (currentGame === 'sandbox') {
+        resetExpBtn.classList.add('visible');
+        aimCompBtn.classList.add('visible');
+        resetExpBtn.textContent = '↺ Center Tip';
+        heroBadge.textContent = '🧪';
+        heroBadge.style.background = 'linear-gradient(135deg, #7c3aed, #db2777)';
+        heroBadge.style.color = '#fff';
+
+        const sim = simulateWhatIfShot(
+          sandboxState.cue, sandboxState.obj, sandboxState.pocket,
+          explorerTip.x, explorerTip.y, explorerPower, sandboxState.blockers
+        );
+
+        kickerEl.textContent = 'INTERACTIVE SPIN, SQUIRT & TANGENT LAB';
+        titleEl.textContent = `1-Ball → ${sandboxState.pocket} (${getRelativePocketDesc(sandboxState.pocket)})`;
+        calloutEl.textContent = sim && !sim.impossibleCut && !sim.whiffedObjectBall ? `Leave: ${sim.endCoord}` : 'Missed!';
+        notesEl.innerHTML = `<strong>Spin Lab:</strong> Drag the <strong>Green Tip Dot</strong> left or right to see how <strong>Cue-Ball Squirt + Throw</strong> pushes the 1-Ball off-line (<strong>Red Arrow</strong>), or up/down for pure Follow &amp; Draw!`;
+
+        tipModeLabel.textContent = 'Explorer Spin (Green)';
+        cueEl.textContent = describeExplorerSpin(explorerTip.x, explorerTip.y);
+        powerEl.textContent = `Power ${explorerPower} · ${pwrLabels[explorerPower]}`;
+        setSpeedSegments(explorerPower);
+
+        pocketEl.textContent = sandboxState.pocket;
+        angleEl.textContent = sim && sim.cutDeg ? `${Math.round(sim.cutDeg)}°` : '—';
+        railsEl.textContent = sim && !sim.impossibleCut && !sim.whiffedObjectBall ? `${sim.bounces} Rail${sim.bounces === 1 ? '' : 's'}` : '—';
+
+        const msg = formatOutcomeMessage(sim, '1-Ball', sandboxState.pocket);
+        expReadout.classList.add('visible');
+        expReadout.classList.toggle('warn', msg.warn);
+        expReadout.textContent = msg.text;
+        return;
+      }
+
+      const rData = getRackData();
+      const strokes = getStrokes();
+      if (!rData) return;
+
+      const bih = getActiveBIH();
+      prevBtn.disabled = (currentStrokeIdx === 0);
+      resetExpBtn.classList.toggle('visible', explorerActive);
+      aimCompBtn.classList.toggle('visible', explorerActive);
+      resetExpBtn.textContent = '↺ Snap to Coach';
+
+      if (currentStrokeIdx === 0) {
+        const subTitle = currentGame === '8ball' ? ` (${currentSubset === 'stripes' ? 'Stripes' : 'Solids'})` : '';
+        kickerEl.textContent = `TABLE SETUP · ${strokes.length} SHOTS TO RUN`;
+        titleEl.textContent = `${rData.title}${subTitle}`;
+        calloutEl.textContent = `Ball in Hand: ${bih}`;
+        heroBadge.textContent = '⚪';
+        heroBadge.style.background = 'rgba(56, 189, 248, 0.16)';
+        heroBadge.style.color = '#fff';
+
+        notesEl.innerHTML = `<strong>Rack Overview:</strong> Spot all balls on your table and place the cue ball at <strong>${bih}</strong>. When the table rotates between shots, it pauses cleanly so you can read the shot before it fires.`;
+        nextBtn.textContent = 'Start Run-Out ▶';
+        nextBtn.disabled = false;
+
+        pocketEl.textContent = 'Setup';
+        angleEl.textContent = '—';
+        railsEl.textContent = '—';
+        tipModeLabel.textContent = 'Ball in Hand';
+        cueEl.textContent = `Place at ${bih}`;
+        coachDot.style.top = '50%'; coachDot.style.left = '50%';
+        powerEl.textContent = 'Ready';
+        setSpeedSegments(0);
+        expReadout.classList.remove('visible');
+        return;
+      }
+
+      const s = strokes[currentStrokeIdx - 1];
+      const bNum = parseInt(s.ball);
+      const bCol = BALL_PALETTE[bNum] || '#38bdf8';
+      const relPkt = getRelativePocketDesc(s.pocket);
+
+      kickerEl.textContent = `SHOT ${currentStrokeIdx} OF ${strokes.length} · ${relPkt.toUpperCase()} POCKET`;
+      titleEl.textContent = `Pocket ${bNum}-Ball into ${s.pocket}`;
+      calloutEl.textContent = s.leave === 'Rack over' ? '🏆 RACK OVER' : `Coach Leave: ${s.leave}`;
+
+      heroBadge.textContent = String(bNum);
+      heroBadge.style.background = bCol;
+      heroBadge.style.color = (bNum === 1 || bNum === 9) ? '#090d16' : '#ffffff';
+
+      notesEl.innerHTML = `<strong>Pro Coach:</strong> ${s.notes}`;
+      nextBtn.textContent = currentStrokeIdx === strokes.length ? 'Rack Complete ✓' : 'Next Shot ▶';
+      nextBtn.disabled = (currentStrokeIdx === strokes.length);
+
+      pocketEl.textContent = `${s.pocket} (${relPkt})`;
+      angleEl.textContent = s.angle || '20°';
+      const bCnt = s.bounces || 0;
+      railsEl.textContent = s.leave === 'Rack over' ? 'Pocket' : (bCnt === 0 ? '0 (Direct)' : `${bCnt} Rail${bCnt > 1 ? 's' : ''}`);
+
+      if (s.spin_type === 'follow' || s.cue === 12) {
+        coachDot.style.top = s.spin_type === 'stun_follow' ? '33%' : '22%';
+        coachDot.style.left = '50%';
+      } else if (s.spin_type === 'draw' || s.spin_type === 'stun_draw' || s.cue === 6) {
+        coachDot.style.top = s.spin_type === 'stun_draw' ? '67%' : '78%';
+        coachDot.style.left = '50%';
+      } else {
+        coachDot.style.top = '50%'; coachDot.style.left = '50%';
+      }
+
+      if (explorerActive) {
+        tipModeLabel.textContent = 'What-If Spin (Green)';
+        cueEl.textContent = describeExplorerSpin(explorerTip.x, explorerTip.y);
+        powerEl.textContent = `Power ${explorerPower} · ${pwrLabels[explorerPower]}`;
+        setSpeedSegments(explorerPower);
+
+        const startCueStr = currentStrokeIdx === 1 ? getActiveBIH() : strokes[currentStrokeIdx - 2].leave;
+        const pocketedSet = new Set();
+        for (let i = 0; i < currentStrokeIdx; i++) pocketedSet.add(parseInt(strokes[i].ball));
+        const obsG = rData.balls
+          .filter(b => !pocketedSet.has(b.number))
+          .map(b => { const g = parseGridCoord(b.coord); return { number: b.number, x: g.x, y: g.y }; });
+        const sim = simulateWhatIfShot(parseGridCoord(startCueStr), parseGridCoord(s.obj || s.coord), s.pocket, explorerTip.x, explorerTip.y, explorerPower, obsG);
+
+        const msg = formatOutcomeMessage(sim, `${bNum}-Ball`, s.pocket);
+        expReadout.classList.add('visible');
+        expReadout.classList.toggle('warn', msg.warn);
+        expReadout.textContent = msg.text;
+      } else {
+        expReadout.classList.remove('visible');
+        tipModeLabel.textContent = 'Coach Tip (Red = Green)';
+        if (s.spin_type === 'follow' || s.cue === 12) cueEl.textContent = s.spin_type === 'stun_follow' ? '12 High-Center (Soft Follow)' : '12 o’clock (Top Follow)';
+        else if (s.spin_type === 'draw' || s.spin_type === 'stun_draw' || s.cue === 6) cueEl.textContent = s.spin_type === 'stun_draw' ? '6 Low-Center (Stun-Draw)' : '6 o’clock (Low Draw)';
+        else cueEl.textContent = 'Center Ball (Pure Stun)';
+
+        const pwr = parseInt(s.power) || 3;
+        powerEl.textContent = `Power ${pwr} · ${pwrLabels[pwr] || 'Medium'}`;
+        setSpeedSegments(pwr);
+      }
+    }
+
+    function setSpeedSegments(pwr) {
+      document.querySelectorAll('#speedSegments .speed-seg').forEach((el, i) => {
+        el.className = 'speed-seg' + (i < pwr ? ` on-${i + 1}` : '');
+      });
+    }
+
+    // ==================== SCORECARD ====================
+    function getTryKey(rNum = currentRackNum) {
+      return `${currentGame}_${currentSubset}_${rNum}`;
+    }
+
+    function loadTries() {
+      try {
+        const raw = localStorage.getItem('cuelab_arena_tries');
+        if (raw) tryData = JSON.parse(raw);
+      } catch (e) {}
+    }
+
+    function saveTries() {
+      try { localStorage.setItem('cuelab_arena_tries', JSON.stringify(tryData)); } catch (e) {}
+    }
+
+    function toggleTry(idx) {
+      const k = getTryKey();
+      if (!tryData[k]) tryData[k] = [null, null, null, null, null];
+      const cur = tryData[k][idx];
+      tryData[k][idx] = cur === null ? true : (cur === true ? false : null);
+      saveTries();
+      updateTryUI();
+    }
+
+    function resetTries() {
+      tryData[getTryKey()] = [null, null, null, null, null];
+      saveTries();
+      updateTryUI();
+    }
+
+    function updateTryUI() {
+      if (currentGame === 'sandbox') return;
+      const tries = tryData[getTryKey()] || [null, null, null, null, null];
+      const btns = document.querySelectorAll('#tryContainer .try-slot');
+      let wins = 0;
+      btns.forEach((b, i) => {
+        b.className = 'try-slot';
+        if (tries[i] === true) { b.classList.add('win'); b.textContent = `T${i+1} ✓`; wins++; }
+        else if (tries[i] === false) { b.classList.add('miss'); b.textContent = `T${i+1} ✗`; }
+        else { b.textContent = `T${i+1}`; }
+      });
+
+      const chip = document.getElementById('passChip');
+      if (wins >= 2) { chip.textContent = `✓ PASSED (${wins}/5)`; chip.className = 'status-chip passed'; }
+      else { chip.textContent = `${wins} / 5 Run`; chip.className = 'status-chip'; }
+
+      let passedRacks = 0;
+      for (let r = 1; r <= 25; r++) {
+        const arr = tryData[getTryKey(r)] || [];
+        if (arr.filter(v => v === true).length >= 2) passedRacks++;
+      }
+      document.getElementById('disciplineMastery').textContent = `Discipline Mastery: ${passedRacks} / 25 Racks`;
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
