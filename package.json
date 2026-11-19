@@ -5,7 +5,8 @@
   "description": "CueLab Arena — Pattern Puzzles, Spin Lab & Practice Planner",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/practice-planner.test.js"
+    "test": "node --test test/practice-planner.test.js",
+    "docs:screenshots": "node scripts/capture-docs-screenshots.mjs"
   },
   "engines": {
     "node": ">=22.5.0"

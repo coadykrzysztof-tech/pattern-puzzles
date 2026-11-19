@@ -1044,3 +1044,362 @@ body.student-mode .bento-grid {
   border-radius: 12px;
   line-height: 1.5;
 }
+
+/* ==================== IN-APP HELP / USER MANUAL VIEWER ==================== */
+.help-nav-btn {
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.help-nav-btn:hover {
+  background: rgba(16, 185, 129, 0.24);
+  border-color: #34d399;
+  color: #ffffff;
+}
+
+.cuelab-modal.help-manual-modal {
+  max-width: 960px;
+  width: 100%;
+  height: min(90vh, 860px);
+  max-height: 92vh;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.help-modal-header {
+  padding: 16px 22px 12px;
+  background: rgba(9, 13, 24, 0.96);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.help-modal-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.help-modal-title-row h3 {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.help-audience-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.help-aud-tab {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.help-aud-tab:hover {
+  color: #ffffff;
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+.help-aud-tab.active {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  border-color: rgba(125, 211, 252, 0.6);
+  color: #ffffff;
+}
+
+.help-manual-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 26px 32px;
+  color: #e2e8f0;
+  line-height: 1.65;
+  font-size: 0.94rem;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.help-manual-body .manual-section.hidden-by-filter {
+  display: none;
+}
+
+.help-manual-body h1 {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.025em;
+  margin-bottom: 10px;
+}
+
+.help-manual-body h2 {
+  font-size: 1.24rem;
+  font-weight: 800;
+  color: #38bdf8;
+  margin-top: 26px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.help-manual-body .manual-section:first-child h2 {
+  margin-top: 8px;
+}
+
+.help-manual-body h3 {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-top: 18px;
+  margin-bottom: 6px;
+}
+
+.help-manual-body p {
+  margin-bottom: 11px;
+  color: #cbd5e1;
+}
+
+.help-manual-body strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.help-manual-body ul,
+.help-manual-body ol {
+  margin: 0 0 13px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.help-manual-body li {
+  color: #cbd5e1;
+}
+
+.help-manual-body code {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.84em;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #7dd3fc;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.help-manual-body pre {
+  background: rgba(6, 9, 17, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 10px 0 14px;
+}
+
+.help-manual-body pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #e2e8f0;
+  font-size: 0.84rem;
+}
+
+.help-manual-body blockquote {
+  background: rgba(56, 189, 248, 0.09);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-left: 4px solid var(--accent-cyan);
+  border-radius: 10px;
+  padding: 11px 14px;
+  margin: 12px 0 14px;
+  color: #e2e8f0;
+  font-size: 0.89rem;
+}
+
+.help-manual-body blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.help-manual-body hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 20px 0;
+}
+
+.help-manual-body .manual-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 10px 0 16px;
+}
+
+.help-manual-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.help-manual-body th,
+.help-manual-body td {
+  text-align: left;
+  padding: 8px 11px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.help-manual-body th {
+  background: rgba(30, 41, 59, 0.8);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.help-manual-body td {
+  background: rgba(9, 13, 24, 0.55);
+  color: #cbd5e1;
+}
+
+.manual-figure {
+  margin: 14px 0 18px;
+  background: rgba(6, 9, 17, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.manual-figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 9px;
+  display: block;
+  cursor: zoom-in;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+}
+
+.manual-figure.mobile-shot img {
+  max-width: 340px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.manual-figcaption {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: center;
+}
+
+.manual-role-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.manual-role-pill.role-player {
+  background: rgba(56, 189, 248, 0.16);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.manual-role-pill.role-student {
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.38);
+}
+
+.manual-role-pill.role-instructor {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fde047;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+/* Zoomed Image Lightbox */
+.manual-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 350;
+  background: rgba(2, 5, 12, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 12px;
+  cursor: zoom-out;
+}
+
+.manual-lightbox img {
+  max-width: 96vw;
+  max-height: 86vh;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.9);
+}
+
+.manual-lightbox-caption {
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 680px) {
+  .cuelab-modal-backdrop {
+    padding: 8px;
+  }
+  .cuelab-modal.help-manual-modal {
+    height: 94dvh;
+    max-height: 94dvh;
+    border-radius: 14px;
+  }
+  .help-modal-header {
+    padding: 13px 14px 10px;
+  }
+  .help-manual-body {
+    padding: 15px 15px 28px;
+    font-size: 0.89rem;
+  }
+  .manual-figure.mobile-shot img {
+    max-width: 100%;
+  }
+}
+
+/* Keep Expanded Table unclipped with the additional Practice Planner & Help header buttons */
+body.expanded-mode canvas#poolTable {
+  max-height: calc(100dvh - 236px);
+}
+
+/* Free up vertical phone viewport space in Student Mode */
+@media (max-width: 780px) {
+  body.student-mode header {
+    position: static;
+    padding: 10px 14px;
+  }
+  body.student-mode main {
+    padding: 12px 12px 24px;
+  }
+}

@@ -1870,6 +1870,329 @@
     }
   };
 
+  // ==================== IN-APP HELP / USER MANUAL VIEWER ====================
+  let cachedManualMarkdown = null;
+  let activeManualFilter = 'all';
+
+  function formatInlineMarkdown(rawText) {
+    const codeTokens = [];
+    let s = escapeHtml(rawText).replace(/`([^`]+)`/g, (_, code) => {
+      const idx = codeTokens.length;
+      codeTokens.push(`<code>${code}</code>`);
+      return `@@CODE_${idx}@@`;
+    });
+
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+      const safeHref = href.trim();
+      if (/^https?:\/\//i.test(safeHref)) {
+        return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-cyan); text-decoration:underline;">${label}</a>`;
+      }
+      return label;
+    });
+
+    return s.replace(/@@CODE_(\d+)@@/g, (_, idx) => codeTokens[Number(idx)] || '');
+  }
+
+  function resolveManualImageSrc(rawPath) {
+    const clean = String(rawPath || '').trim().replace(/^\.\//, '');
+    if (clean.startsWith('screenshots/')) return `/docs/${clean}`;
+    if (clean.startsWith('/docs/screenshots/')) return clean;
+    return clean;
+  }
+
+  function renderMarkdownBlockLines(lines) {
+    const html = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      if (!trimmed) {
+        i++;
+        continue;
+      }
+
+      // Fenced code block
+      if (trimmed.startsWith('```')) {
+        const codeLines = [];
+        i++;
+        while (i < lines.length && !lines[i].trim().startsWith('```')) {
+          codeLines.push(escapeHtml(lines[i]));
+          i++;
+        }
+        i++; // skip closing fence
+        html.push(`<pre><code>${codeLines.join('\n')}</code></pre>`);
+        continue;
+      }
+
+      // Horizontal rule
+      if (/^(-{3,}|\*{3,})$/.test(trimmed)) {
+        html.push('<hr>');
+        i++;
+        continue;
+      }
+
+      // Headings
+      const hMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
+      if (hMatch) {
+        const lvl = hMatch[1].length;
+        html.push(`<h${lvl}>${formatInlineMarkdown(hMatch[2])}</h${lvl}>`);
+        i++;
+        continue;
+      }
+
+      // Standalone Image -> Figure with click-to-zoom lightbox
+      const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+      if (imgMatch) {
+        const alt = imgMatch[1].trim();
+        const src = resolveManualImageSrc(imgMatch[2]);
+        const isMobileShot = /mobile/i.test(src);
+        html.push(`
+          <figure class="manual-figure ${isMobileShot ? 'mobile-shot' : ''}">
+            <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy"
+              onclick="window.openManualLightbox('${escapeHtml(src)}', '${escapeHtml(alt)}')">
+            ${alt ? `<figcaption class="manual-figcaption">${escapeHtml(alt)} (click to enlarge)</figcaption>` : ''}
+          </figure>
+        `);
+        i++;
+        continue;
+      }
+
+      // Markdown Table
+      if (trimmed.startsWith('|') && i + 1 < lines.length && /^\|\s*[:\-| ]+\|$/.test(lines[i + 1].trim())) {
+        const splitRow = (r) => r.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+        const headers = splitRow(trimmed);
+        i += 2;
+        const bodyRows = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          bodyRows.push(splitRow(lines[i]));
+          i++;
+        }
+        const thead = `<thead><tr>${headers.map(h => `<th>${formatInlineMarkdown(h)}</th>`).join('')}</tr></thead>`;
+        const tbody = `<tbody>${bodyRows.map(r => `<tr>${r.map(c => `<td>${formatInlineMarkdown(c)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+        html.push(`<div class="manual-table-wrap"><table>${thead}${tbody}</table></div>`);
+        continue;
+      }
+
+      // Blockquote
+      if (trimmed.startsWith('>')) {
+        const qLines = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) {
+          qLines.push(lines[i].trim().replace(/^>\s?/, ''));
+          i++;
+        }
+        html.push(`<blockquote><p>${formatInlineMarkdown(qLines.join(' '))}</p></blockquote>`);
+        continue;
+      }
+
+      // Unordered list
+      if (/^[-*]\s+/.test(trimmed)) {
+        const items = [];
+        while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) {
+          items.push(`<li>${formatInlineMarkdown(lines[i].trim().replace(/^[-*]\s+/, ''))}</li>`);
+          i++;
+        }
+        html.push(`<ul>${items.join('')}</ul>`);
+        continue;
+      }
+
+      // Ordered list
+      if (/^\d+\.\s+/.test(trimmed)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
+          items.push(`<li>${formatInlineMarkdown(lines[i].trim().replace(/^\d+\.\s+/, ''))}</li>`);
+          i++;
+        }
+        html.push(`<ol>${items.join('')}</ol>`);
+        continue;
+      }
+
+      // Paragraph (accumulate consecutive plain lines)
+      const pLines = [];
+      while (
+        i < lines.length &&
+        lines[i].trim() &&
+        !/^(#{1,3}\s|```|[-*]\s|\d+\.\s|>|\||!\[|---|\*\*\*|<!--)/.test(lines[i].trim())
+      ) {
+        pLines.push(lines[i].trim());
+        i++;
+      }
+      if (pLines.length) {
+        html.push(`<p>${formatInlineMarkdown(pLines.join(' '))}</p>`);
+      } else {
+        i++;
+      }
+    }
+
+    return html.join('\n');
+  }
+
+  function renderUserManualMarkdown(mdText) {
+    const rawLines = String(mdText || '').split(/\r?\n/);
+    const sections = [];
+    let currentAudience = 'all';
+    let currentLines = [];
+
+    for (const line of rawLines) {
+      const audMatch = line.trim().match(/^<!--\s*audience:\s*(all|player|student|instructor)\s*-->$/i);
+      if (audMatch) {
+        if (currentLines.some(l => l.trim().length > 0)) {
+          sections.push({ audience: currentAudience, lines: currentLines });
+        }
+        currentAudience = audMatch[1].toLowerCase();
+        currentLines = [];
+      } else {
+        currentLines.push(line);
+      }
+    }
+    if (currentLines.some(l => l.trim().length > 0)) {
+      sections.push({ audience: currentAudience, lines: currentLines });
+    }
+
+    const rolePillMap = {
+      player: '<span class="manual-role-pill role-player">Players &amp; Table</span>',
+      student: '<span class="manual-role-pill role-student">Student Feature</span>',
+      instructor: '<span class="manual-role-pill role-instructor">Instructor Feature</span>'
+    };
+
+    return sections.map((sec) => {
+      let bodyHtml = renderMarkdownBlockLines(sec.lines);
+      if (rolePillMap[sec.audience]) {
+        bodyHtml = bodyHtml.replace(/<h2>([\s\S]*?)<\/h2>/, `<h2><span>$1</span>${rolePillMap[sec.audience]}</h2>`);
+      }
+      return `<div class="manual-section" data-audience="${sec.audience}">${bodyHtml}</div>`;
+    }).join('\n');
+  }
+
+  function buildOfflineManualFallbackHtml() {
+    return `
+      <div class="manual-section" data-audience="all">
+        <h1>CueLab Arena — Quick Help (Offline Fallback)</h1>
+        <blockquote>
+          <p><strong>Local Server Needed for Full Illustrated Manual:</strong> You opened <code>index.html</code> directly via <code>file://</code> (or the local server is not currently running), so browsers block loading <code>docs/USER_MANUAL.md</code> and screenshots directly from disk.</p>
+        </blockquote>
+        <p>To view the complete illustrated User Manual with screenshots — and to use the Practice Planner and Student Share Links — start the local server:</p>
+        <pre><code>cd app
+npm start</code></pre>
+        <p>Then open <strong>http://127.0.0.1:3000</strong> in your browser and click <strong>? Help</strong>.</p>
+        <h2>Quick Table &amp; Keyboard Reference</h2>
+        <ul>
+          <li><strong>Game Tabs:</strong> Switch between 9-Ball, 10-Ball, 8-Ball Solids, 8-Ball Stripes, and <strong>🧪 Spin Lab</strong>.</li>
+          <li><strong>POV Rotation:</strong> Use <code>Auto-Flip ↑</code>, <code>Shooter Line ↑</code>, or <code>Fixed</code> so shots always aim away from you.</li>
+          <li><strong>Shortcuts:</strong> <code>→</code> Next Shot · <code>←</code> Prev Shot · <code>R</code> Reset Rack · <code>F</code> Flip Table 180° · <code>E</code> Expand Table.</li>
+          <li><strong>Cue-Tip Explorer:</strong> Drag the green dot on the cue ball to preview follow, draw, English, and squirt/throw misses.</li>
+          <li><strong>Ball Magnifier:</strong> Hover or tap any ball on the table to see its exact coordinate and number.</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  function applyManualFilterToDom(filterKey) {
+    activeManualFilter = filterKey;
+    document.querySelectorAll('.help-aud-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === filterKey);
+    });
+    const body = document.getElementById('helpManualBody');
+    if (!body) return;
+    body.querySelectorAll('.manual-section').forEach(sec => {
+      const aud = sec.dataset.audience || 'all';
+      const show = filterKey === 'all' || aud === 'all' || aud === filterKey;
+      sec.classList.toggle('hidden-by-filter', !show);
+    });
+    body.scrollTop = 0;
+  }
+
+  window.setManualAudienceFilter = function (filterKey) {
+    applyManualFilterToDom(filterKey);
+  };
+
+  window.openManualLightbox = function (src, caption) {
+    closeManualLightbox();
+    const lb = document.createElement('div');
+    lb.className = 'manual-lightbox';
+    lb.id = 'manualLightbox';
+    lb.onclick = closeManualLightbox;
+    lb.innerHTML = `
+      <img src="${escapeHtml(src)}" alt="${escapeHtml(caption || '')}">
+      <div class="manual-lightbox-caption">${escapeHtml(caption || '')} — Click anywhere or press Esc to close</div>
+    `;
+    document.body.appendChild(lb);
+  };
+
+  function closeManualLightbox() {
+    const existing = document.getElementById('manualLightbox');
+    if (existing) existing.remove();
+  }
+
+  window.openUserManualModal = async function () {
+    const defaultFilter = isStudentMode ? 'student' : 'all';
+    const backdrop = document.getElementById('cuelabModalBackdrop');
+    if (!backdrop) return;
+
+    const tabsHtml = isStudentMode
+      ? `
+        <button type="button" class="help-aud-tab" data-filter="student" onclick="window.setManualAudienceFilter('student')">🎯 Student Practice</button>
+        <button type="button" class="help-aud-tab" data-filter="player" onclick="window.setManualAudienceFilter('player')">🎱 Table &amp; Controls</button>
+        <button type="button" class="help-aud-tab" data-filter="all" onclick="window.setManualAudienceFilter('all')">📚 Full Manual</button>
+      `
+      : `
+        <button type="button" class="help-aud-tab" data-filter="all" onclick="window.setManualAudienceFilter('all')">📚 All Guide</button>
+        <button type="button" class="help-aud-tab" data-filter="player" onclick="window.setManualAudienceFilter('player')">🎱 Players &amp; Spin Lab</button>
+        <button type="button" class="help-aud-tab" data-filter="student" onclick="window.setManualAudienceFilter('student')">🎯 Student Practice</button>
+        <button type="button" class="help-aud-tab" data-filter="instructor" onclick="window.setManualAudienceFilter('instructor')">📋 Instructor Guide</button>
+      `;
+
+    backdrop.innerHTML = `
+      <div class="cuelab-modal help-manual-modal" onclick="event.stopPropagation()">
+        <div class="help-modal-header">
+          <div class="help-modal-title-row">
+            <h3>📖 CueLab Arena — User Manual</h3>
+            <button type="button" class="icon-btn" onclick="window.closeCueLabModal()" aria-label="Close User Manual">✕</button>
+          </div>
+          <div class="help-audience-tabs">${tabsHtml}</div>
+        </div>
+        <div class="help-manual-body" id="helpManualBody">
+          <div style="color:var(--text-secondary); padding:18px 0;">Loading illustrated user manual...</div>
+        </div>
+      </div>
+    `;
+    backdrop.classList.add('open');
+    backdrop.onclick = closeModal;
+
+    const bodyEl = document.getElementById('helpManualBody');
+    if (window.location.protocol === 'file:') {
+      if (bodyEl) bodyEl.innerHTML = buildOfflineManualFallbackHtml();
+      applyManualFilterToDom('all');
+      return;
+    }
+
+    try {
+      if (!cachedManualMarkdown) {
+        const resp = await fetch('/docs/USER_MANUAL.md', { cache: 'no-cache' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        cachedManualMarkdown = await resp.text();
+      }
+      if (bodyEl) bodyEl.innerHTML = renderUserManualMarkdown(cachedManualMarkdown);
+      applyManualFilterToDom(defaultFilter);
+    } catch (err) {
+      if (bodyEl) bodyEl.innerHTML = buildOfflineManualFallbackHtml();
+      applyManualFilterToDom('all');
+    }
+  };
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (document.getElementById('manualLightbox')) {
+        closeManualLightbox();
+      } else if (document.getElementById('cuelabModalBackdrop')?.classList.contains('open')) {
+        closeModal();
+      }
+    }
+  });
+
   // ==================== INITIALIZE ====================
   window.initPracticePlanner = function () {
     const params = new URLSearchParams(window.location.search);

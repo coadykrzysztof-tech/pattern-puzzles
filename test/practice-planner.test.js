@@ -57,6 +57,25 @@ test('Practice Planner end-to-end API, snapshot stability, and student isolation
     const blockedDb = await invoke(handleRequest, 'GET', '/cuelab.db');
     assert.equal(blockedDb.statusCode, 404);
 
+    const manualRes = await invoke(handleRequest, 'GET', '/docs/USER_MANUAL.md');
+    assert.equal(manualRes.statusCode, 200);
+    assert.match(manualRes.headers['Content-Type'], /text\/markdown/);
+    assert.match(manualRes.text, /CueLab Arena — User Manual/);
+    assert.equal(manualRes.text.includes('/api/instructor/'), false, 'User Manual must never expose private instructor endpoints');
+
+    const shotRes = await invoke(handleRequest, 'GET', '/docs/screenshots/09-expanded-magnifier-mode.png');
+    assert.equal(shotRes.statusCode, 200);
+    assert.equal(shotRes.headers['Content-Type'], 'image/png');
+
+    const blockedTestPlan = await invoke(handleRequest, 'GET', '/docs/TEST_PLAN.md');
+    assert.equal(blockedTestPlan.statusCode, 404);
+
+    const blockedGemini = await invoke(handleRequest, 'GET', '/GEMINI.md');
+    assert.equal(blockedGemini.statusCode, 404);
+
+    const blockedTraversal = await invoke(handleRequest, 'GET', '/docs/screenshots/../../server.js');
+    assert.equal(blockedTraversal.statusCode, 404);
+
     // 2. Auth setup, login, and unauthorized rejection
     const initStatus = await invoke(handleRequest, 'GET', '/api/instructor/auth/status');
     assert.deepEqual(initStatus.json, { configured: false, authenticated: false });

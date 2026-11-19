@@ -678,7 +678,15 @@ function createAppServer(options = {}) {
     ['/index.html', 'text/html; charset=utf-8'],
     ['/data.js', 'application/javascript; charset=utf-8'],
     ['/planner.js', 'application/javascript; charset=utf-8'],
-    ['/planner.css', 'text/css; charset=utf-8']
+    ['/planner.css', 'text/css; charset=utf-8'],
+    ['/docs/USER_MANUAL.md', 'text/markdown; charset=utf-8']
+  ]);
+
+  const SCREENSHOT_MIME = new Map([
+    ['.png', 'image/png'],
+    ['.jpg', 'image/jpeg'],
+    ['.jpeg', 'image/jpeg'],
+    ['.webp', 'image/webp']
   ]);
 
   async function handleRequest(req, res) {
@@ -1146,7 +1154,14 @@ function createAppServer(options = {}) {
       }
 
       const cleanPath = pathname === '/' ? '/index.html' : pathname;
-      const contentType = ALLOWED_STATIC_FILES.get(cleanPath);
+      let contentType = ALLOWED_STATIC_FILES.get(cleanPath);
+      if (!contentType) {
+        const shotMatch = cleanPath.match(/^\/docs\/screenshots\/([A-Za-z0-9._-]+)$/);
+        if (shotMatch && !shotMatch[1].includes('..')) {
+          const ext = path.extname(shotMatch[1]).toLowerCase();
+          contentType = SCREENSHOT_MIME.get(ext);
+        }
+      }
       if (!contentType) {
         res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
         res.end('Not Found');
